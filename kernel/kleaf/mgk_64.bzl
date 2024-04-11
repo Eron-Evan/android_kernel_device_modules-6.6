@@ -469,7 +469,6 @@ mgk_64_device_modules = [
     "drivers/misc/mediatek/monitor_hang/monitor_hang.ko",
     "drivers/misc/mediatek/mtk-interconnect/mtk-icc-core.ko",
     "drivers/misc/mediatek/mtprintk/mtk_printk_ctrl.ko",
-    "drivers/misc/mediatek/mtprof/bootprof.ko",
     "drivers/misc/mediatek/nfc/st21nfc/st21nfc.ko",
     "drivers/misc/mediatek/nfc/st54spi.ko",
     "drivers/misc/mediatek/nfc/p73-spi/p73.ko",
@@ -1065,7 +1064,6 @@ mgk_64_platform_device_modules = {
 
 mgk_64_device_eng_modules = [
     "drivers/misc/mediatek/cpufreq_v1/cpuhvfs.ko",
-    "drivers/misc/mediatek/mtprof/irq_monitor.ko",
     "drivers/misc/mediatek/selinux_warning/mtk_selinux_aee_warning.ko",
 ]
 
@@ -1075,7 +1073,6 @@ mgk_64_platform_device_eng_modules = {
 
 mgk_64_device_userdebug_modules = [
     "drivers/misc/mediatek/cpufreq_v1/cpuhvfs.ko",
-    "drivers/misc/mediatek/mtprof/irq_monitor.ko",
     "drivers/misc/mediatek/selinux_warning/mtk_selinux_aee_warning.ko",
 ]
 
