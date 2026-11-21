@@ -2461,11 +2461,11 @@ static int mml_probe(struct platform_device *pdev)
 	if (mml->dpc_disable)
 		mml_log("dpc disable by project");
 
-#if defined(MML_IR_SUPPORT)
+//#if defined(MML_IR_SUPPORT)
 	mml->racing_en = of_property_read_bool(dev->of_node, "racing-enable");
 	if (mml->racing_en)
 		mml_log("IR mode enable");
-#endif
+//#endif
 
 	if (of_property_read_u8(dev->of_node, "mml-max-layer", &mml->max_layer))
 		mml->max_layer = MML_MAX_LAYER;
