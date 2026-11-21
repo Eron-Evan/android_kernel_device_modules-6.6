@@ -601,7 +601,7 @@ void pd_dpm_snk_standby_power(struct pd_port *pd_port)
 	 */
 	uint8_t type;
 	int ma = -1;
-	const int standby_curr = 2500000 / max(pd_port->request_v,
+	int standby_curr = 2500000 / max(pd_port->request_v,
 					       pd_port->request_v_new);
 
 #if CONFIG_USB_PD_VCONN_SAFE5V_ONLY
@@ -631,19 +631,28 @@ void pd_dpm_snk_standby_power(struct pd_port *pd_port)
 		return;
 #endif	/* CONFIG_USB_PD_REV30_PPS_SINK */
 
-	if (pd_port->request_v_new == pd_port->request_v &&
-	    pd_port->request_i_new == pd_port->request_i)
-		return;
-	else if (pd_port->request_i > standby_curr ||
-		 pd_port->request_i > pd_port->request_i_new) {
-		ma = (standby_curr > pd_port->request_i_new) ?
-		      pd_port->request_i_new : standby_curr;
-		if (pd_port->request_v_new > pd_port->request_v)
-			type = TCP_VBUS_CTRL_STANDBY_UP;
-		else if (pd_port->request_v_new < pd_port->request_v)
-			type = TCP_VBUS_CTRL_STANDBY_DOWN;
-		else
-			type = TCP_VBUS_CTRL_STANDBY;
+	if(standby_curr > pd_port->request_i_new)
+		standby_curr = pd_port->request_i_new;
+
+	if (pd_port->request_v_new > pd_port->request_v) {
+		/* Case2 Increasing the Voltage */
+		/* Case3 Increasing the Voltage and Current */
+		/* Case4 Increasing the Voltage and Decreasing the Curren */
+		ma = standby_curr;
+		type = TCP_VBUS_CTRL_STANDBY_UP;
+	} else if (pd_port->request_v_new < pd_port->request_v) {
+		/* Case5 Decreasing the Voltage and Increasing the Current */
+		/* Case7 Decreasing the Voltage */
+		/* Case8 Decreasing the Voltage and the Current*/
+		ma = standby_curr;
+		type = TCP_VBUS_CTRL_STANDBY_DOWN;
+	} else if (pd_port->request_i_new < pd_port->request_i) {
+		/* Case6 Decreasing the Current, t1 i = new */
+		ma = pd_port->request_i_new;
+		type = TCP_VBUS_CTRL_STANDBY;
+	}
+
+	if (ma >= 0) {
 		tcpci_sink_vbus(
 			pd_port->tcpc, type, pd_port->request_v_new, ma);
 	}

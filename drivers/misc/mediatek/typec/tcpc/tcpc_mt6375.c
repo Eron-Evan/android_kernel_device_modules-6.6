@@ -738,31 +738,6 @@ static int mt6375_hidet_cc_evt_process(struct mt6375_tcpc_data *ddata)
 	return tcpci_notify_cc_hi(ddata->tcpc, ret);
 }
 
-static int mt6375_get_fod_status(struct mt6375_tcpc_data *ddata,
-				 enum tcpc_fod_status *fod)
-{
-	int ret;
-	u8 data;
-
-	ret = mt6375_read8(ddata, MT6375_REG_MTST4, &data);
-	if (ret < 0)
-		return ret;
-	data &= MT6375_MSK_FOD_ALL;
-
-	/* LR possesses the highest priority */
-	if (data & MT6375_MSK_FOD_LR)
-		*fod = TCPC_FOD_LR;
-	else if (data & MT6375_MSK_FOD_HR)
-		*fod = TCPC_FOD_HR;
-	else if (data & MT6375_MSK_FOD_DISCHGF)
-		*fod = TCPC_FOD_DISCHG_FAIL;
-	else if (data & MT6375_MSK_FOD_OV)
-		*fod = TCPC_FOD_OV;
-	else
-		*fod = TCPC_FOD_NONE;
-	return 0;
-}
-
 static void mt6375_fod_polling_dwork_handler(struct work_struct *work)
 {
 	struct delayed_work *dwork = to_delayed_work(work);
@@ -776,24 +751,6 @@ static void mt6375_fod_polling_dwork_handler(struct work_struct *work)
 	tcpci_lock_typec(ddata->tcpc);
 	mt6375_set_bits(ddata, MT6375_REG_FODCTRL, MT6375_MSK_FOD_FW_EN);
 	tcpci_unlock_typec(ddata->tcpc);
-}
-
-static int mt6375_fod_evt_process(struct mt6375_tcpc_data *ddata)
-{
-	int ret = 0;
-	enum tcpc_fod_status fod = TCPC_FOD_NONE;
-	struct tcpc_device *tcpc = ddata->tcpc;
-
-	ret = mt6375_get_fod_status(ddata, &fod);
-	if (ret < 0)
-		return ret;
-	ret = mt6375_clr_bits(ddata, MT6375_REG_FODCTRL, MT6375_MSK_FOD_FW_EN);
-	if (ret < 0)
-		return ret;
-	if (fod == TCPC_FOD_LR)
-		mod_delayed_work(system_wq, &ddata->fod_polling_dwork,
-				 msecs_to_jiffies(5000));
-	return tcpc_typec_handle_fod(tcpc, fod);
 }
 
 #if CONFIG_CABLE_TYPE_DETECTION
@@ -2011,7 +1968,9 @@ static int mt6375_wd12_done_irq_handler(struct mt6375_tcpc_data *ddata)
 
 static int mt6375_fod_irq_handler(struct mt6375_tcpc_data *ddata)
 {
-	return mt6375_fod_evt_process(ddata);
+	/* WD0_PULL_STS from 1 to 0 in normal polling mode */
+	MT6375_INFO("%s wd0 stfall trigger\n", __func__);
+	return mt6375_floating_ground_evt_process(ddata);
 }
 
 static int mt6375_ctd_irq_handler(struct mt6375_tcpc_data *ddata)
