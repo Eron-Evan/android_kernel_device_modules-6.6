@@ -29,6 +29,7 @@ mgk_64_kleaf_modules = [
     "//vendor/mediatek/kernel_modules/connectivity/gps/data_link/plat/v061:gps_drv_dl_v061",
     "//vendor/mediatek/kernel_modules/connectivity/gps/data_link/plat/v062:gps_drv_dl_v062",
     "//vendor/mediatek/kernel_modules/connectivity/gps/gps_pwr:gps_pwr",
+    "//vendor/mediatek/kernel_modules/connectivity/gps/mi_gps_pwr:mi_gps_pwr",
     "//vendor/mediatek/kernel_modules/connectivity/gps/gps_scp:gps_scp",
     "//vendor/mediatek/kernel_modules/connectivity/gps/gps_stp:gps_drv_stp",
     "//vendor/mediatek/kernel_modules/connectivity/wlan/adaptor/build/connac1x:wmt_chrdev_wifi",
@@ -44,9 +45,6 @@ mgk_64_kleaf_modules = [
     "//vendor/mediatek/kernel_modules/connectivity/wlan/core/gen4m/build/connac3x/6991_6653:wlan_drv_gen4m_6991_6653",
     "//vendor/mediatek/kernel_modules/connectivity/wlan/core/gen4m/build/connac3x/6991_6653_2g2a:wlan_drv_gen4m_6991_6653_2g2a",
     "//vendor/mediatek/kernel_modules/connectivity/wlan/core/gen4m/build/connac3x/6991_6653_triband:wlan_drv_gen4m_6991_6653_triband",
-    "//vendor/mediatek/kernel_modules/connectivity/wlan/core/gen4m/build/connac3x/eap_6653:wlan_drv_gen4m_eap_6653",
-    "//vendor/mediatek/kernel_modules/connectivity/wlan/core/gen4m/build/connac3x/6991_6639_tc10sp:wlan_drv_gen4m_6991_6639_tc10sp",
-    "//vendor/mediatek/kernel_modules/connectivity/wlan/core/gen4m/build/connac3x/6991_6639_new9gen2:wlan_drv_gen4m_6991_6639_new9gen2",
     "//vendor/mediatek/kernel_modules/cpufreq_cus:cpu_freq",
     "//vendor/mediatek/kernel_modules/cpufreq_int:cpu_hwtest",
     "//vendor/mediatek/kernel_modules/fpsgo_cus:fpsgo_cus",
@@ -104,8 +102,6 @@ mgk_64_kleaf_modules = [
     "//vendor/mediatek/kernel_modules/mtkcam/img_frm_sync:mtk-img-frm-sync",
     "//vendor/mediatek/kernel_modules/task_turbo_cus:task_turbo_cus",
     "//vendor/mediatek/kernel_modules/task_turbo_int:task_turbo_int",
-    "//vendor/mediatek/kernel_modules/game_cus:game_cus",
-    "//vendor/mediatek/kernel_modules/game_int:game_int",
 ]
 
 mgk_64_kleaf_eng_modules = [
@@ -241,9 +237,6 @@ mgk_64_device_modules = [
     "drivers/gpu/drm/panel/nt50358a_i2c.ko",
     "drivers/gpu/drm/panel/panel-boe-tv080wxmlls.ko",
     "drivers/gpu/drm/panel/panel-nt51021h-wuxga-vdo-boe.ko",
-    "drivers/gpu/drm/panel/panel-n11a-42-02-0a-dsc-vdo.ko",
-    "drivers/gpu/drm/panel/k6991v1_64_alpha/panel-nt37706a-boe-fhdplus-vdo.ko",
-    "drivers/gpu/drm/panel/panel-vtdr6126a-vdo.ko",
     "drivers/gpu/mediatek/ged/ged.ko",
     "drivers/gpu/mediatek/gpu_bm/mtk_gpu_qos.ko",
     "drivers/gpu/mediatek/gpueb/mtk_gpueb.ko",
@@ -266,27 +259,26 @@ mgk_64_device_modules = [
     "drivers/iio/adc/rt9490-adc.ko",
     "drivers/input/keyboard/mtk-kpd.ko",
     "drivers/input/keyboard/mtk-pmic-keys.ko",
-    "drivers/input/touchscreen/k6991v1_64_91t_vdo_1k5_alpha/oplus_bsp_tp_comon.ko",
-    "drivers/input/touchscreen/k6991v1_64_91t_vdo_1k5_alpha/Synaptics/oplus_bsp_tp_syna_comnon.ko",
-    "drivers/input/touchscreen/k6991v1_64_91t_vdo_1k5_alpha/Synaptics/Syna_tcm_S3910/oplus_bsp_tp_tcm_S3910.ko",
-    "drivers/input/touchscreen/BoTai_Multi_Touch/BoTai_touch_one/botai_touch_one.ko",
-    "drivers/input/touchscreen/BoTai_Multi_Touch/BoTai_touch_two/botai_touch_two.ko",
-    "drivers/input/touchscreen/GT9886/gt9886.ko",
-    "drivers/input/touchscreen/GT9895/gt9895.ko",
-    "drivers/input/touchscreen/GT9896S/gt9896s.ko",
-    "drivers/input/touchscreen/GT1151/gt1151.ko",
-    "drivers/input/touchscreen/legacy_gt9896s/legacy_gt9896s.ko",
-    "drivers/input/touchscreen/focaltech_touch/focaltech_touch.ko",
-    "drivers/input/touchscreen/NT36532/nt36532.ko",
-    "drivers/input/touchscreen/chsc5448_p785/chsc5448_p785.ko",
-    "drivers/input/touchscreen/GT9966/gt9966.ko",
-    "drivers/input/touchscreen/gt9xx/gt9xx_touch.ko",
-    "drivers/input/touchscreen/ILITEK/ilitek_i2c.ko",
-    "drivers/input/touchscreen/NT36672C_I2C/nt36672c_i2c.ko",
-    "drivers/input/touchscreen/k6985v1_64_alpha/tp_y761.ko",
-    "drivers/input/touchscreen/synaptics_dsx_96789/synaptics_touch_96789.ko",
-    "drivers/input/touchscreen/synaptics_dsx_96851/synaptics_touch_96851.ko",
-    "drivers/input/touchscreen/tui-common.ko",
+    #"drivers/input/touchscreen/BoTai_Multi_Touch/BoTai_touch_one/botai_touch_one.ko",
+    #"drivers/input/touchscreen/BoTai_Multi_Touch/BoTai_touch_two/botai_touch_two.ko",
+    #"drivers/input/touchscreen/GT9886/gt9886.ko",
+    #"drivers/input/touchscreen/GT9895/gt9895.ko",
+    #"drivers/input/touchscreen/GT9896S/gt9896s.ko",
+    #"drivers/input/touchscreen/GT1151/gt1151.ko",
+    #"drivers/input/touchscreen/legacy_gt9896s/legacy_gt9896s.ko",
+    #"drivers/input/touchscreen/focaltech_touch/focaltech_touch.ko",
+    #"drivers/input/touchscreen/NT36532/nt36532.ko",
+    #"drivers/input/touchscreen/GT9966/gt9966.ko",
+    #"drivers/input/touchscreen/gt9xx/gt9xx_touch.ko",
+    #"drivers/input/touchscreen/ILITEK/ilitek_i2c.ko",
+    #"drivers/input/touchscreen/NT36672C_I2C/nt36672c_i2c.ko",
+    #"drivers/input/touchscreen/k6985v1_64_alpha/tp_y761.ko",
+    #"drivers/input/touchscreen/synaptics_dsx_96789/synaptics_touch_96789.ko",
+    #"drivers/input/touchscreen/synaptics_dsx_96851/synaptics_touch_96851.ko",
+    #"drivers/input/touchscreen/tui-common.ko",
+    "drivers/input/misc/aw_haptic/haptic.ko",
+    "drivers/input/misc/si_haptic/si_haptic.ko",
+    "drivers/input/misc/aac_haptic/aac_haptic.ko",
     "drivers/interconnect/mediatek/mmqos-common.ko",
     "drivers/interconnect/mediatek/mtk-emi.ko",
     "drivers/interconnect/mediatek/mtk-emibus-icc.ko",
@@ -296,6 +288,7 @@ mgk_64_device_modules = [
     "drivers/iommu/arm/arm-smmu-v3/mtk-smmuv3-mpam-mon.ko",
     "drivers/misc/mediatek/iommu/mtk_smmu_qos.ko",
     "drivers/iommu/mtk_iommu.ko",
+    "drivers/leds/leds-aw21024.ko",
     "drivers/leds/leds-mt6360.ko",
     "drivers/leds/leds-mtk-disp.ko",
     "drivers/leds/leds-mtk.ko",
@@ -389,6 +382,7 @@ mgk_64_device_modules = [
     "drivers/misc/mediatek/flashlight/v4l2/k6983v1_64_alpha/sy7806.ko",
     "drivers/misc/mediatek/flashlight/v4l2/lm3643.ko",
     "drivers/misc/mediatek/flashlight/v4l2/lm3644.ko",
+    "drivers/misc/mediatek/flashlight/v4l2/ocp81377.ko",
     "drivers/misc/mediatek/gate_ic/rt4831a_drv.ko",
     "drivers/misc/mediatek/geniezone/gz_main_mod.ko",
     "drivers/misc/mediatek/geniezone/gz-trusty/gz_ipc_mod.ko",
@@ -478,6 +472,8 @@ mgk_64_device_modules = [
     "drivers/misc/mediatek/mtprof/bootprof.ko",
     "drivers/misc/mediatek/nfc/st21nfc/st21nfc.ko",
     "drivers/misc/mediatek/nfc/st54spi.ko",
+    "drivers/misc/mediatek/nfc/p73-spi/p73.ko",
+    "drivers/misc/mediatek/nfc/nxp-i2c/nxp_i2c.ko",
     "drivers/misc/mediatek/pbm/mtk_pbm.ko",
     "drivers/misc/mediatek/pbm/mtk_peak_power_budget.ko",
     "drivers/misc/mediatek/pcie/mtk_pcie_smt.ko",
@@ -634,6 +630,7 @@ mgk_64_device_modules = [
     "drivers/misc/mediatek/vow/ver02/mtk-vow.ko",
     "drivers/misc/mediatek/widevine_drm/widevine_driver.ko",
     "drivers/misc/mediatek/wlcdrv/wlcdrv.ko",
+    "drivers/misc/mediatek/elliptic/elliptic-ultrasound.ko",
     "drivers/mmc/host/cqhci.ko",
     "drivers/mmc/host/mtk-mmc-dbg.ko",
     "drivers/mmc/host/mtk-mmc.ko",
@@ -696,6 +693,11 @@ mgk_64_device_modules = [
     "drivers/power/supply/rt9490-charger.ko",
     "drivers/power/supply/rt9758-charger.ko",
     "drivers/power/supply/rt9759.ko",
+    "drivers/power/supply/bq28z610.ko",
+    "drivers/power/supply/sc858x_charger.ko",
+    "drivers/power/supply/hl7603.ko",
+    "drivers/power/supply/bq25985_charger.ko",
+    "drivers/power/supply/pd_single_cp_manager.ko",
     "drivers/pwm/pwm-mtk-disp.ko",
     "drivers/regulator/mt6315-regulator.ko",
     "drivers/regulator/mt6316-regulator.ko",
@@ -713,6 +715,8 @@ mgk_64_device_modules = [
     "drivers/regulator/mtk-vmm-isp71-regulator.ko",
     "drivers/regulator/rt4803.ko",
     "drivers/regulator/rt5133-regulator.ko",
+    "drivers/regulator/wl2866d.ko",
+    "drivers/regulator/sgm38121.ko",
     "drivers/regulator/rt6160-regulator.ko",
     "drivers/remoteproc/mtk_ccu.ko",
     "drivers/remoteproc/mtk_ccu_mssv.ko",
@@ -741,11 +745,6 @@ mgk_64_device_modules = [
     "drivers/spi/spi-mt65xx.ko",
     "drivers/spmi/spmi-mtk-mpu.ko",
     "drivers/spmi/spmi-mtk-pmif.ko",
-    "drivers/tee/gud/610/MobiCoreDriver/mcDrvModule.ko",
-    "drivers/tee/gud/610/MobiCoreDriver/mcDrvModule-ffa.ko",
-    "drivers/tee/gud/610/TlcTui/t-base-tui.ko",
-    "drivers/tee/teei/510/isee.ko",
-    "drivers/tee/teei/510/isee-ffa.ko",
     "drivers/tee/teeperf/teeperf.ko",
     "drivers/thermal/mediatek/backlight_cooling.ko",
     "drivers/thermal/mediatek/board_temp.ko",
@@ -758,6 +757,7 @@ mgk_64_device_modules = [
     "drivers/thermal/mediatek/vtskin_temp.ko",
     "drivers/thermal/mediatek/wifi_cooling.ko",
     "drivers/thermal/mediatek/cpu_isolate_cooling.ko",
+    "drivers/thermal/xiaomi/mi_thermal_interface.ko",
     "drivers/tty/serial/8250/8250_mtk.ko",
     "drivers/usb/mtu3/mtu3.ko",
     "drivers/watchdog/mtk_wdt.ko",
@@ -773,6 +773,8 @@ mgk_64_device_modules = [
     "sound/soc/codecs/snd-soc-mt6368.ko",
     "sound/soc/codecs/snd-soc-mt6681.ko",
     "sound/soc/codecs/tfa98xx/snd-soc-tfa98xx.ko",
+    "sound/soc/codecs/pa_combine/snd-soc-aw882xx.ko",
+    "sound/soc/codecs/et7480/et7480.ko",
     "sound/soc/codecs/snd-soc-mt6359.ko",
     "sound/soc/mediatek/audio_dsp/mtk-soc-offload-common.ko",
     "sound/soc/mediatek/audio_dsp/snd-soc-audiodsp-common.ko",
@@ -783,6 +785,8 @@ mgk_64_device_modules = [
     "sound/soc/mediatek/ultrasound/ultra_common/mtk-scp-ultra.ko",
     "sound/soc/mediatek/ultrasound/ultra_scp/snd-soc-mtk-scp-ultra.ko",
     "sound/soc/mediatek/vow/mtk-scp-vow.ko",
+    "drivers/misc/mediatek/cam_log/cam_log.ko",
+    "drivers/misc/xiaomi/kshrink_slabd/kshrink_slabd.ko",
 ]
 
 mgk_64_platform_device_modules = {
@@ -1061,7 +1065,6 @@ mgk_64_platform_device_modules = {
 
 mgk_64_device_eng_modules = [
     "drivers/misc/mediatek/cpufreq_v1/cpuhvfs.ko",
-    "drivers/misc/mediatek/locking/locking_aee.ko",
     "drivers/misc/mediatek/mtprof/irq_monitor.ko",
     "drivers/misc/mediatek/selinux_warning/mtk_selinux_aee_warning.ko",
 ]
@@ -1405,7 +1408,6 @@ def get_overlay_modules_list():
         mgk_64_device_modules.remove("drivers/thermal/mediatek/thermal_trace.ko")
         mgk_64_device_modules.remove("drivers/thermal/mediatek/vtskin_temp.ko")
         mgk_64_device_modules.remove("drivers/thermal/mediatek/wifi_cooling.ko")
-        mgk_64_device_modules.remove("drivers/thermal/mediatek/cpu_isolate_cooling.ko")
 
         mgk_64_device_modules.remove("drivers/gpu/mediatek/gpueb/mtk_gpueb.ko")
         mgk_64_device_modules.remove("drivers/gpu/mediatek/gpueb/mtk_ghpm.ko")
@@ -1556,7 +1558,6 @@ def get_overlay_modules_list():
         mgk_64_device_modules.remove("drivers/thermal/mediatek/thermal_trace.ko")
         mgk_64_device_modules.remove("drivers/thermal/mediatek/vtskin_temp.ko")
         mgk_64_device_modules.remove("drivers/thermal/mediatek/wifi_cooling.ko")
-        mgk_64_device_modules.remove("drivers/thermal/mediatek/cpu_isolate_cooling.ko")
 
         mgk_64_platform_device_modules.pop("drivers/gpu/drm/mediatek/mml/mtk-mml-mt6878.ko")
         mgk_64_platform_device_modules.pop("drivers/gpu/drm/mediatek/mml/mtk-mml-mt6886.ko")
@@ -1956,7 +1957,6 @@ def get_overlay_modules_list():
         mgk_64_device_modules.remove("drivers/thermal/mediatek/thermal_trace.ko")
         mgk_64_device_modules.remove("drivers/thermal/mediatek/vtskin_temp.ko")
         mgk_64_device_modules.remove("drivers/thermal/mediatek/wifi_cooling.ko")
-        mgk_64_device_modules.remove("drivers/thermal/mediatek/cpu_isolate_cooling.ko")
 
         mgk_64_device_modules.remove("sound/soc/codecs/mt6338-accdet.ko")
         mgk_64_device_modules.remove("sound/soc/codecs/snd-soc-mt6338.ko")
@@ -2294,7 +2294,6 @@ def get_overlay_modules_list():
         mgk_64_device_modules.remove("drivers/thermal/mediatek/thermal_trace.ko")
         mgk_64_device_modules.remove("drivers/thermal/mediatek/vtskin_temp.ko")
         mgk_64_device_modules.remove("drivers/thermal/mediatek/wifi_cooling.ko")
-        mgk_64_device_modules.remove("drivers/thermal/mediatek/cpu_isolate_cooling.ko")
 
         mgk_64_device_modules.append("drivers/misc/mediatek/thermal/thermal_monitor.ko")
         mgk_64_device_modules.append("drivers/misc/mediatek/hps_v3/mtk_cpuhp.ko")
@@ -3052,7 +3051,6 @@ def get_overlay_modules_list():
         mgk_64_device_modules.remove("drivers/thermal/mediatek/thermal_trace.ko")
         mgk_64_device_modules.remove("drivers/thermal/mediatek/vtskin_temp.ko")
         mgk_64_device_modules.remove("drivers/thermal/mediatek/wifi_cooling.ko")
-        mgk_64_device_modules.remove("drivers/thermal/mediatek/cpu_isolate_cooling.ko")
 
         mgk_64_platform_device_modules.pop("drivers/gpu/drm/mediatek/mml/mtk-mml-mt6878.ko")
         mgk_64_platform_device_modules.pop("drivers/gpu/drm/mediatek/mml/mtk-mml-mt6886.ko")
@@ -3383,7 +3381,6 @@ def get_overlay_modules_list():
         mgk_64_device_modules.remove("drivers/thermal/mediatek/thermal_trace.ko")
         mgk_64_device_modules.remove("drivers/thermal/mediatek/vtskin_temp.ko")
         mgk_64_device_modules.remove("drivers/thermal/mediatek/wifi_cooling.ko")
-        mgk_64_device_modules.remove("drivers/thermal/mediatek/cpu_isolate_cooling.ko")
 
         mgk_64_device_modules.remove("drivers/memory/mediatek/emi.ko")
         mgk_64_device_modules.remove("drivers/memory/mediatek/emi-fake-eng.ko")
@@ -3727,7 +3724,6 @@ def get_overlay_modules_list():
         mgk_64_device_modules.remove("drivers/thermal/mediatek/thermal_trace.ko")
         mgk_64_device_modules.remove("drivers/thermal/mediatek/vtskin_temp.ko")
         mgk_64_device_modules.remove("drivers/thermal/mediatek/wifi_cooling.ko")
-        mgk_64_device_modules.remove("drivers/thermal/mediatek/cpu_isolate_cooling.ko")
 
         mgk_64_device_modules.remove("drivers/regulator/mt6370-regulator.ko")
         mgk_64_device_modules.remove("drivers/misc/mediatek/gate_ic/rt4831a_drv.ko")
@@ -3995,7 +3991,6 @@ def get_overlay_modules_list():
         mgk_64_device_modules.remove("drivers/thermal/mediatek/thermal_trace.ko")
         mgk_64_device_modules.remove("drivers/thermal/mediatek/vtskin_temp.ko")
         mgk_64_device_modules.remove("drivers/thermal/mediatek/wifi_cooling.ko")
-        mgk_64_device_modules.remove("drivers/thermal/mediatek/cpu_isolate_cooling.ko")
 
         mgk_64_platform_device_modules.pop("drivers/gpu/drm/mediatek/mml/mtk-mml-mt6878.ko")
         mgk_64_platform_device_modules.pop("drivers/gpu/drm/mediatek/mml/mtk-mml-mt6886.ko")
@@ -4493,31 +4488,8 @@ def get_overlay_modules_list():
         mgk_64_device_modules.remove("drivers/tee/teei/515/isee.ko")
         mgk_64_device_modules.append("drivers/tee/teei/400/isee.ko")
 
-    if "79xx.config" in DEFCONFIG_OVERLAYS:
-        mgk_64_kleaf_modules.append("//vendor/mediatek/kernel_modules/connectivity/wlan/core/gen4-mt79xx:wlan_mt7961")
-        mgk_64_kleaf_modules.append("//vendor/mediatek/kernel_modules/connectivity/bt/linux_v2_ce:btmtk_uart_unify_ce")
-        mgk_64_kleaf_modules.remove("//vendor/mediatek/kernel_modules/connectivity/gps/data_link/plat/v010:gps_drv_dl_v010")
-        mgk_64_kleaf_modules.remove("//vendor/mediatek/kernel_modules/connectivity/gps/data_link/plat/v030:gps_drv_dl_v030")
-        mgk_64_kleaf_modules.remove("//vendor/mediatek/kernel_modules/connectivity/gps/data_link/plat/v050:gps_drv_dl_v050")
-        mgk_64_kleaf_modules.remove("//vendor/mediatek/kernel_modules/connectivity/gps/data_link/plat/v051:gps_drv_dl_v051")
-        mgk_64_kleaf_modules.remove("//vendor/mediatek/kernel_modules/connectivity/gps/data_link/plat/v060:gps_drv_dl_v060")
-        mgk_64_kleaf_modules.remove("//vendor/mediatek/kernel_modules/connectivity/gps/data_link/plat/v061:gps_drv_dl_v061")
-        mgk_64_kleaf_modules.remove("//vendor/mediatek/kernel_modules/connectivity/gps/data_link/plat/v062:gps_drv_dl_v062")
-        mgk_64_kleaf_modules.remove("//vendor/mediatek/kernel_modules/connectivity/gps/gps_pwr:gps_pwr")
-        mgk_64_kleaf_modules.remove("//vendor/mediatek/kernel_modules/connectivity/gps/gps_scp:gps_scp")
-        mgk_64_kleaf_modules.remove("//vendor/mediatek/kernel_modules/connectivity/gps/gps_stp:gps_drv_stp")
-        mgk_64_kleaf_modules.remove("//vendor/mediatek/kernel_modules/connectivity/wlan/adaptor/build/connac1x:wmt_chrdev_wifi")
-        mgk_64_kleaf_modules.remove("//vendor/mediatek/kernel_modules/connectivity/wlan/adaptor/build/connac2x:wmt_chrdev_wifi_connac2")
-        mgk_64_kleaf_modules.remove("//vendor/mediatek/kernel_modules/connectivity/wlan/adaptor/build/connac3x:wmt_chrdev_wifi_connac3")
-        mgk_64_kleaf_modules.remove("//vendor/mediatek/kernel_modules/connectivity/wlan/adaptor/wlan_page_pool:wlan_page_pool")
-        mgk_64_kleaf_modules.remove("//vendor/mediatek/kernel_modules/connectivity/wlan/core/gen4m/build/connac2x/6897:wlan_drv_gen4m_6897")
-        mgk_64_kleaf_modules.remove("//vendor/mediatek/kernel_modules/connectivity/wlan/core/gen4m/build/connac2x/6899:wlan_drv_gen4m_6899")
-        mgk_64_kleaf_modules.remove("//vendor/mediatek/kernel_modules/connectivity/wlan/core/gen4m/build/connac3x/6985_6639:wlan_drv_gen4m_6985_6639")
-        mgk_64_kleaf_modules.remove("//vendor/mediatek/kernel_modules/connectivity/wlan/core/gen4m/build/connac3x/6989_6639:wlan_drv_gen4m_6989_6639")
-        mgk_64_kleaf_modules.remove("//vendor/mediatek/kernel_modules/connectivity/wlan/core/gen4m/build/connac3x/6989_6639_dppm:wlan_drv_gen4m_6989_6639_dppm")
-        mgk_64_kleaf_modules.remove("//vendor/mediatek/kernel_modules/connectivity/wlan/core/gen4m/build/connac3x/6991_6653:wlan_drv_gen4m_6991_6653")
-        mgk_64_kleaf_modules.remove("//vendor/mediatek/kernel_modules/connectivity/wlan/core/gen4m/build/connac3x/6991_6653_2g2a:wlan_drv_gen4m_6991_6653_2g2a")
-        mgk_64_kleaf_modules.remove("//vendor/mediatek/kernel_modules/connectivity/wlan/core/gen4m/build/connac3x/6991_6653_triband:wlan_drv_gen4m_6991_6653_triband")
-        mgk_64_kleaf_modules.remove("//vendor/mediatek/kernel_modules/connectivity/wlan/core/gen4m/build/connac3x/eap_6653:wlan_drv_gen4m_eap_6653")
+    if "rodin" in DEFCONFIG_OVERLAYS:
+        mgk_64_device_modules.append("drivers/gpu/drm/panel/panel-o10-42-02-0a-dsc-vdo.ko")
+        mgk_64_device_modules.append("drivers/gpu/drm/panel/panel-o10-36-02-0b-dsc-vdo.ko")
 
 get_overlay_modules_list()
