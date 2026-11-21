@@ -8199,8 +8199,8 @@ sw_info,frame_id,custom,pipeline_stage,RPID,UID";
 				<1>, /*MTK_DRM_OPT_ESD_CHECK_SWITCH*/
 				<1>, /*MTK_DRM_OPT_PRESENT_FENCE*/
 				<0>, /*MTK_DRM_OPT_RDMA_UNDERFLOW_AEE*/
-				<0>, /*MTK_DRM_OPT_DSI_UNDERRUN_AEE*/
-				<0>, /*MTK_DRM_OPT_DSI_UNDERRUN_AEE_V2*/
+				<1>, /*MTK_DRM_OPT_DSI_UNDERRUN_AEE*/
+				<1>, /*MTK_DRM_OPT_DSI_UNDERRUN_AEE_V2*/
 				<0>, /*MTK_DRM_OPT_ODDMR_UNDERRUN_AEE*/
 				<1>, /*MTK_DRM_OPT_HRT*/
 				<1>, /*MTK_DRM_OPT_HRT_MODE*/
@@ -8255,7 +8255,7 @@ sw_info,frame_id,custom,pipeline_stage,RPID,UID";
 				<0>, /*MTK_DRM_OPT_DPC_PRE_TE_EN*/
 				<1>, /*MTK_DRM_OPT_PARTIAL_UPDATE*/
 				<0>, /*MTK_DRM_OPT_SLC_ALL_CACHE*/
-				<0>, /*MTK_DRM_OPT_OVL_WCG_BY_COLOR_MODE*/
+				<1>, /*MTK_DRM_OPT_OVL_WCG_BY_COLOR_MODE*/
 				<0>; /*"MTK_DRM_OPT_OVLSYS_CASCADE"*/
 		};
 
@@ -10777,6 +10777,7 @@ sw_info,frame_id,custom,pipeline_stage,RPID,UID";
 			reg = <0 0x15310000 0 0x9000>;
 			// dma-ranges = <0x0 0x0 0x0 0x0 0x4 0x0>;
 			cmdqsec-supply = <&gce_m_sec>;
+			maeplat-supply = <&mtk_mae_plat>;
 			mboxes = <&gce_m 20 0 CMDQ_THR_PRIO_1>,
 					<&gce_m_sec 11 CMDQ_NO_TIMEOUT CMDQ_THR_PRIO_2>;
 			mediatek,larb = <&smi_larb12>;
@@ -10787,12 +10788,6 @@ sw_info,frame_id,custom,pipeline_stage,RPID,UID";
 			iommus = <&disp_iommu M4U_L12_P0_FDVT_RDA_0>,
 						<&disp_iommu M4U_L12_P1_FDVT_WRA_0>;
 			power-domains = <&hfrpsys MT6899_POWER_DOMAIN_ISP_MAIN>;
-		};
-
-		mtk_mae_plat: mtk-mae-plat@15319000 {
-			compatible = "mediatek,mtk-mae-plat-isp8-mt6899";
-			reg = <0 0x15319000 0 0x1000>;
-			mae-supply = <&mae>;
 			clocks = <&img_vcore_d1a_clk CLK_IMG_VCORE_GALS_DISP_CAMERA_MAE>,
 				<&img_vcore_d1a_clk CLK_IMG_VCORE_MAIN_CAMERA_MAE>,
 				<&img_vcore_d1a_clk CLK_IMG_VCORE_SUB0_CAMERA_MAE>,
@@ -10817,6 +10812,11 @@ sw_info,frame_id,custom,pipeline_stage,RPID,UID";
 				"GALS_TRX_IPE0_CAMERA_MAE",
 				"GALS_TRX_IPE1_CAMERA_MAE",
 				"GALS_CAMERA_MAE";
+		};
+
+		mtk_mae_plat: mtk-mae-plat@15319000 {
+			compatible = "mediatek,mtk-mae-plat-isp8-mt6899";
+			reg = <0 0x15319000 0 0x1000>;
 		};
 
 		smi-larb9@15001000 {
@@ -15389,7 +15389,7 @@ sw_info,frame_id,custom,pipeline_stage,RPID,UID";
 
 			core-nums = <1>;	/* core number */
 			twohart = <1>;		/* two hart arch */
-			mbox-count = <4>;
+			mbox-count = <5>;
 			/* id, mbox, send_size*/
 			send-table =
 			< 0 0  11>,/* IPI_OUT_AUDIO_VOW_1 */
@@ -15415,7 +15415,8 @@ sw_info,frame_id,custom,pipeline_stage,RPID,UID";
 			<43 3  4>,/* IPI_OUT_NPU_SCP */
 			<45 3  1>,/* IPI_OUT_SCP_PM_NOTIFY_0 */
 			<47 3  2>,/* IPI_PIN_HOST_SCP_CHRE */
-			<48 3  2>;/* IPI_PIN_SCP_HOST_CHRE */
+			<48 3  2>,/* IPI_PIN_SCP_HOST_CHRE */
+			<54 4  4>;/* IPI_OUT_SCP_TP */
 
 			#recv-cells-mode = <1>;
 			//mode 0 or no defined #recv-cells-mode => 4 elements : id, mbox,
@@ -15446,7 +15447,8 @@ sw_info,frame_id,custom,pipeline_stage,RPID,UID";
 			<40 3  4 0 0 0 0>,/* IPI_IN_SCP_AOV */
 			<44 3  4 0 0 0 0>,/* IPI_IN_SCP_NPU */
 			<47 3  2 1 0 0 0>,/* IPI_PIN_HOST_SCP_CHRE ack slot */
-			<48 3  2 0 0 0 1>;/* IPI_PIN_SCP_HOST_CHRE msg slot */
+			<48 3  2 0 0 0 1>,/* IPI_PIN_SCP_HOST_CHRE msg slot */
+			<55 4  3 0 0 0 0>;/* IPI_IN_SCP_TP */
 
 			//legacy_table =	<11>, /* out_id_0 IPI_OUT_SCP_MPOOL_0 */
 			//		<24>, /* out_id_1 IPI_OUT_SCP_MPOOL_1 */
@@ -15502,7 +15504,9 @@ sw_info,frame_id,custom,pipeline_stage,RPID,UID";
 					//<15 0x10000 0x0>, /* aod */
 					<17 0x8000 0x0>, /* scp chre from */
 					<18 0x8000 0x0>, /* scp chre to */
-					<19 0x200 0x0>;  /* low power debug */
+					<19 0x200 0x0>,  /* low power debug */
+					<21 0x8000 0x0>,  /* ELUS */
+					<22 0x100 0x0>; /* scp tp */
 
 			scp-resource-dump = "enable";   /* enable dump scp related resource */
 			/* regulator */
@@ -15603,7 +15607,7 @@ sw_info,frame_id,custom,pipeline_stage,RPID,UID";
 			"mbox0_init";
 		interrupts = <GIC_SPI 841 IRQ_TYPE_LEVEL_HIGH 0>; /* using mbox4's hw */
 		interrupt-names = "mbox0";
-		mbox-count = <1>;
+		mbox-count = <0>;
 		/* id, mbox, send_size */
 		send-table =
 			<1 0 17>; /* IPI_OUT_SENSOR_SAP_NOTIFY */
@@ -17221,8 +17225,8 @@ sw_info,frame_id,custom,pipeline_stage,RPID,UID";
 							    0x00 0x00 0x00 0x00
 							    0x00 0x00 0x01 0x00
 							    0x00 0x00 0x00 0x00
-							    0x01 0x0b 0x01 0x0a
-							    0x0a 0x00 0x00 0x00>;
+							    0x01 0x0b 0x01 0x5a
+							    0x5a 0x00 0x00 0x00>;
 				pd,mfrs = "RichtekTCPC";
 
 				/*
@@ -17230,12 +17234,12 @@ sw_info,frame_id,custom,pipeline_stage,RPID,UID";
 				 *	MAX_POWER_LV = 0x21, MAX_POWER_LVIC = 0x31
 				 *	MAX_POWER_HV = 0x41, MAX_POWER_HVIC = 0x51
 				 */
-				pd,charging-policy = <0x31>;
+				pd,charging-policy = <2>;
 
 				pd,source-pdo-size = <1>;
 				pd,source-pdo-data = <0x00019096>; /* 5V, 1500 mA */
-				pd,sink-pdo-size = <1>;
-				pd,sink-pdo-data = <0x000190c8>;
+				pd,sink-pdo-size = <3>;
+				pd,sink-pdo-data = <0x0001912c 0x0002d12c 0xc190245a>;
 
 				/*
 				 * No DP Sink capability
@@ -17271,7 +17275,7 @@ sw_info,frame_id,custom,pipeline_stage,RPID,UID";
 				local-no-suspend;
 
 				/* With DP Source capability */
-				attempt-enter-dp-mode;
+				// attempt-enter-dp-mode;
 				// attempt-discover-cable;
 				// attempt-discover-id;
 				// attempt-discover-svids;
@@ -17287,23 +17291,6 @@ sw_info,frame_id,custom,pipeline_stage,RPID,UID";
 				dr-check = <0>;
 				// dr-reject-as-dfp;
 				// dr-reject-as-ufp;
-			};
-			displayport {
-				/* connection type = "both", "ufp-d", "dfp-d" */
-				1st-connection = "dfp-d";
-				2nd-connection = "dfp-d";
-				// usbr20-not-used;
-				typec,receptacle;
-				ufp-d {
-					// pin-assignment,mode-c;
-					// pin-assignment,mode-d;
-					// pin-assignment,mode-e;
-				};
-				dfp-d {
-					pin-assignment,mode-c;
-					pin-assignment,mode-d;
-					pin-assignment,mode-e;
-				};
 			};
 		};
 		mt6375_auxadc: auxadc {
@@ -17363,6 +17350,7 @@ sw_info,frame_id,custom,pipeline_stage,RPID,UID";
 			compatible = "mediatek,mt6375-dbg";
 		};
 		mt6375_batoc_throttle: mtk-battery-oc-throttling {
+			status = "disabled";
 			compatible = "mediatek,mt6375-battery_oc_throttling";
 			interrupts-extended = <&mtk_gauge MT6375_IRQ_FG_CUR_H>,
 					      <&mtk_gauge MT6375_IRQ_FG_CUR_L>;
