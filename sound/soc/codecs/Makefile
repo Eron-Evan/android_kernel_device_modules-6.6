@@ -49,3 +49,6 @@ obj-$(CONFIG_SND_SOC_FS16XX)    += fs18xx/
 obj-$(CONFIG_SND_SOC_RT9123)	+= richtek/rt9123/
 obj-$(CONFIG_SND_SOC_AW883XX)   += aw883xx/
 obj-$(CONFIG_SND_SOC_AW87XXX)   += aw87xxx/
+obj-$(CONFIG_SND_SMARTPA_AW882XX) += pa_combine/
+obj-$(CONFIG_USB_SWITCH_ET7480) += et7480/
+
