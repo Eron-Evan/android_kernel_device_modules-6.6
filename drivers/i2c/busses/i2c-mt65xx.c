@@ -28,6 +28,7 @@
 #include <linux/slab.h>
 #include <linux/spinlock.h>
 #include <linux/sched/clock.h>
+#include <linux/pm_qos.h>
 
 #define I2C_CONFERR			(1 << 9)
 #define I2C_RS_TRANSFER			(1 << 4)
@@ -390,6 +391,7 @@ struct mtk_i2c {
 	unsigned long long complete_time;
 	unsigned long complete_ns;
 	u32 last_addr;
+	struct pm_qos_request i2c_qos_request;
 };
 
 /**
@@ -2317,6 +2319,9 @@ static int mtk_i2c_transfer(struct i2c_adapter *adap,
 		}
 	}
 
+	/* update qos to prevent deep idle during transfer */
+	cpu_latency_qos_update_request(&i2c->i2c_qos_request, 20);
+
 	ret = mtk_i2c_clock_enable(i2c);
 	if (ret)
 		goto err_clk;
@@ -2431,6 +2436,7 @@ err_clk:
 		if (result)
 			dev_info(i2c->dev, "%s: scp_wake_release error\n", __func__);
 	}
+	cpu_latency_qos_update_request(&i2c->i2c_qos_request, PM_QOS_DEFAULT_VALUE);
 	return ret;
 }
 
@@ -2763,6 +2769,8 @@ static int mtk_i2c_probe(struct platform_device *pdev)
 #ifndef CONFIG_MTK_SENTRY_MODE
 	mtk_i2c_clock_disable(i2c);
 #endif
+	/* register qos to prevent deep idle during transfer */
+	cpu_latency_qos_add_request(&i2c->i2c_qos_request, PM_QOS_DEFAULT_VALUE);
 
 	ret = devm_request_irq(&pdev->dev, irq, mtk_i2c_irq,
 			       IRQF_NO_SUSPEND | IRQF_TRIGGER_NONE,
