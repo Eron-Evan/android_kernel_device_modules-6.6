@@ -36,7 +36,6 @@ mgk_64_kleaf_modules = [
     "//vendor/mediatek/kernel_modules/connectivity/wlan/adaptor/build/connac2x:wmt_chrdev_wifi_connac2",
     "//vendor/mediatek/kernel_modules/connectivity/wlan/adaptor/build/connac3x:wmt_chrdev_wifi_connac3",
     "//vendor/mediatek/kernel_modules/connectivity/wlan/adaptor/wlan_page_pool:wlan_page_pool",
-    "//vendor/mediatek/kernel_modules/connectivity/wlan/core/gen3/build/6771:wlan_drv_gen3",
     "//vendor/mediatek/kernel_modules/connectivity/wlan/core/gen4m/build/connac2x/6897:wlan_drv_gen4m_6897",
     "//vendor/mediatek/kernel_modules/connectivity/wlan/core/gen4m/build/connac2x/6899:wlan_drv_gen4m_6899",
     "//vendor/mediatek/kernel_modules/connectivity/wlan/core/gen4m/build/connac3x/6985_6639:wlan_drv_gen4m_6985_6639",
@@ -47,11 +46,11 @@ mgk_64_kleaf_modules = [
     "//vendor/mediatek/kernel_modules/connectivity/wlan/core/gen4m/build/connac3x/6991_6653_triband:wlan_drv_gen4m_6991_6653_triband",
     "//vendor/mediatek/kernel_modules/cpufreq_cus:cpu_freq",
     "//vendor/mediatek/kernel_modules/cpufreq_int:cpu_hwtest",
-    "//vendor/mediatek/kernel_modules/fpsgo_cus:fpsgo_cus",
-    "//vendor/mediatek/kernel_modules/fpsgo_int:fpsgo_int",
-    "//vendor/mediatek/kernel_modules/afs_common_utils:jank_detection_common_utils",
-    "//vendor/mediatek/kernel_modules/afs_core_int:jank_detection_core_int",
-    "//vendor/mediatek/kernel_modules/afs_core_cus:jank_detection_core_cus",
+    #"//vendor/mediatek/kernel_modules/fpsgo_cus:fpsgo_cus",
+    #"//vendor/mediatek/kernel_modules/fpsgo_int:fpsgo_int",
+    #"//vendor/mediatek/kernel_modules/afs_common_utils:jank_detection_common_utils",
+    #"//vendor/mediatek/kernel_modules/afs_core_int:jank_detection_core_int",
+    #"//vendor/mediatek/kernel_modules/afs_core_cus:jank_detection_core_cus",
     "//vendor/mediatek/kernel_modules/gpu:gpu",
     "//vendor/mediatek/kernel_modules/hbt_driver_cus:hbt_cus",
     "//vendor/mediatek/kernel_modules/hbt_driver:hbt_int",
@@ -100,8 +99,8 @@ mgk_64_kleaf_modules = [
     "//vendor/mediatek/kernel_modules/sched_cus:sched_cus",
     "//vendor/mediatek/kernel_modules/sched_int:sched_int",
     "//vendor/mediatek/kernel_modules/mtkcam/img_frm_sync:mtk-img-frm-sync",
-    "//vendor/mediatek/kernel_modules/task_turbo_cus:task_turbo_cus",
-    "//vendor/mediatek/kernel_modules/task_turbo_int:task_turbo_int",
+    #"//vendor/mediatek/kernel_modules/task_turbo_cus:task_turbo_cus",
+    #"//vendor/mediatek/kernel_modules/task_turbo_int:task_turbo_int",
 ]
 
 mgk_64_kleaf_eng_modules = [
@@ -484,9 +483,9 @@ mgk_64_device_modules = [
     "drivers/misc/mediatek/pcie/mtk_pcie_smt.ko",
     "drivers/misc/mediatek/cg_ppt/mtk_cg_peak_power_throttling.ko",
     "drivers/misc/mediatek/perf_common/mtk_perf_common.ko",
-    "drivers/misc/mediatek/performance/fpsgo_v3/mtk_fpsgo.ko",
+    #"drivers/misc/mediatek/performance/fpsgo_v3/mtk_fpsgo.ko",
     "drivers/misc/mediatek/performance/pelt_hint/mtk_pelt_hint.ko",
-    "drivers/misc/mediatek/performance/frs/frs.ko",
+    #"drivers/misc/mediatek/performance/frs/frs.ko",
     "drivers/misc/mediatek/performance/load_track/load_track.ko",
     "drivers/misc/mediatek/performance/mtk_ioctl_touch_boost.ko",
     "drivers/misc/mediatek/performance/mtk_ioctl_powerhal.ko",
@@ -495,7 +494,7 @@ mgk_64_device_modules = [
     "drivers/misc/mediatek/performance/powerhal_cpu_ctrl/powerhal_cpu_ctrl.ko",
     "drivers/misc/mediatek/performance/touch_boost/touch_boost.ko",
     "drivers/misc/mediatek/performance/uload_ind/uload_ind.ko",
-    "drivers/misc/mediatek/performance/game/mtk_game.ko",
+    #"drivers/misc/mediatek/performance/game/mtk_game.ko",
     "drivers/misc/mediatek/pgboost/pgboost.ko",
     "drivers/misc/mediatek/pidmap/pidmap.ko",
     "drivers/misc/mediatek/pkvm_mgmt/pkvm_mgmt.ko",
@@ -585,7 +584,7 @@ mgk_64_device_modules = [
     "drivers/misc/mediatek/swpm/modules/debug/v6991/mtk-swpm-isp-dbg-v6991.ko",
     "drivers/misc/mediatek/swpm/mtk-swpm.ko",
     "drivers/misc/mediatek/swpm/mtk-swpm-perf-arm-pmu.ko",
-    "drivers/misc/mediatek/task_turbo/task_turbo.ko",
+    #"drivers/misc/mediatek/task_turbo/task_turbo.ko",
     "drivers/misc/mediatek/tinysys_scmi/tinysys-scmi.ko",
     "drivers/misc/mediatek/trusted_mem/ffa_v11.ko",
     "drivers/misc/mediatek/trusted_mem/tmem_ffa.ko",
@@ -1120,8 +1119,8 @@ def get_overlay_modules_list():
         mgk_64_device_modules.append("drivers/misc/mediatek/flashlight/flashlights-sywt78.ko")
 
     if "fpga.config" in DEFCONFIG_OVERLAYS:
-        mgk_64_kleaf_modules.remove("//vendor/mediatek/kernel_modules/fpsgo_cus:fpsgo_cus")
-        mgk_64_kleaf_modules.remove("//vendor/mediatek/kernel_modules/fpsgo_int:fpsgo_int")
+        #mgk_64_kleaf_modules.remove("//vendor/mediatek/kernel_modules/fpsgo_cus:fpsgo_cus")
+        #mgk_64_kleaf_modules.remove("//vendor/mediatek/kernel_modules/fpsgo_int:fpsgo_int")
         mgk_64_kleaf_modules.remove("//vendor/mediatek/kernel_modules/met_drv_secure_v3:met_drv_secure_v3")
         mgk_64_kleaf_modules.remove("//vendor/mediatek/kernel_modules/met_drv_v3/met_api:met_api_v3_cus")
         mgk_64_kleaf_modules.remove("//vendor/mediatek/kernel_modules/met_drv_v3/met_api:met_api_v3_int")
@@ -1130,8 +1129,8 @@ def get_overlay_modules_list():
         mgk_64_kleaf_modules.remove("//vendor/mediatek/kernel_modules/msync2_frd_int:msync2_frd_int")
         mgk_64_kleaf_eng_modules.remove("//vendor/mediatek/tests/kernel/ktf_testcase:ktf_testcase")
         mgk_64_kleaf_userdebug_modules.remove("//vendor/mediatek/tests/kernel/ktf_testcase:ktf_testcase")
-        mgk_64_device_modules.remove("drivers/misc/mediatek/performance/fpsgo_v3/mtk_fpsgo.ko")
-        mgk_64_device_modules.remove("drivers/misc/mediatek/performance/frs/frs.ko")
+        #mgk_64_device_modules.remove("drivers/misc/mediatek/performance/fpsgo_v3/mtk_fpsgo.ko")
+        #mgk_64_device_modules.remove("drivers/misc/mediatek/performance/frs/frs.ko")
 
         mgk_64_kleaf_modules.append("//vendor/mediatek/kernel_modules/met_drv_secure_v3:met_drv_secure_v3_default")
         mgk_64_kleaf_modules.append("//vendor/mediatek/kernel_modules/met_drv_v3:met_drv_v3_default")
