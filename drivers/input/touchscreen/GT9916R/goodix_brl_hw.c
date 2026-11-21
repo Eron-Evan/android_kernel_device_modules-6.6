@@ -16,7 +16,6 @@
  *
  */
 #include "goodix_ts_core.h"
-#include "../xiaomi_touch/xiaomi_touch_scp.h"
 
 /* berlin_A SPI mode setting */
 #define GOODIX_SPI_MODE_REG			0xC900
@@ -349,8 +348,6 @@ static int brl_read(struct goodix_ts_core *cd, unsigned int addr,
 {
 	struct goodix_bus_interface *bus = cd->bus;
 
-	if (xiaomi_touch_scp_owned())
-		return xiaomi_touch_scp_read(addr, data, len);
 	return bus->read(bus->dev, addr, data, len);
 }
 
@@ -359,8 +356,6 @@ static int brl_write(struct goodix_ts_core *cd, unsigned int addr,
 {
 	struct goodix_bus_interface *bus = cd->bus;
 
-	if (xiaomi_touch_scp_owned())
-		return -EHOSTDOWN;
 	return bus->write(bus->dev, addr, data, len);
 }
 
@@ -1486,8 +1481,6 @@ static int brl_after_event_handler(struct goodix_ts_core *cd)
 	struct goodix_ic_info_misc *misc = &cd->ic_info.misc;
 	u8 sync_clean = 0;
 
-	if (xiaomi_touch_scp_owned())
-		return 0;
 	return hw_ops->write(cd, cd->raw_enabled && !atomic_read(&cd->suspended) ?
 		misc->frame_data_addr : misc->touch_data_addr, &sync_clean, 1);
 }

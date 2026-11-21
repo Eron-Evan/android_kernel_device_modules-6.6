@@ -2,15 +2,12 @@
 #include <linux/ktime.h>
 #include <asm/unaligned.h>
 #include "focaltech_core.h"
-#include "../xiaomi_touch/xiaomi_touch_scp.h"
 
 unsigned int fts_debug_log_level = 3;
 
 static int focal_log_level(int level)
 {
 	fts_debug_log_level = level;
-	if (!fts_data->scp_mistouch_close)
-		xiaomi_touch_scp_log_level(level);
 	return level;
 }
 
@@ -248,11 +245,6 @@ static void fts_gesture_state(int gesture)
 static void fts_switch_gesture(int gesture)
 {
 	fts_gesture_state(gesture);
-	if (xiaomi_touch_scp_owned()) {
-		xiaomi_touch_scp_update_gesture((gesture & 1) << 2 | (gesture >> 1 & 3),
-			fts_data->nonui_status);
-		return;
-	}
 	if (gesture && fts_data->suspended && fts_data->poweroff_on_sleep) {
 		fts_recover_gesture_from_sleep(fts_data);
 		fts_data->poweroff_on_sleep = false;
@@ -263,8 +255,6 @@ static void fts_switch_gesture(int gesture)
 			if (fts_data->fod_status == 1 || fts_data->fod_status == 2)
 				fts_fod_recovery();
 		}
-		if (fts_data->scp_registered && !fts_data->scp_mistouch_close)
-			xiaomi_touch_scp_switch(true, (gesture & 1) << 2 | (gesture >> 1 & 3));
 		return;
 	}
 	fts_fod_reg_write(2, !!(gesture & 1));
@@ -277,8 +267,6 @@ static int fts_pm(int resume, int gesture)
 	bool was_gesture = fts_data->gesture_support;
 	int ret;
 
-	if (resume && xiaomi_touch_scp_owned())
-		xiaomi_touch_scp_switch(false, (gesture & 1) << 2 | (gesture >> 1 & 3));
 	enable_temperature_detection_func(!!resume);
 	fts_gesture_state(gesture);
 	/* Resume must balance the IRQ wake reference taken by suspend. */
@@ -287,21 +275,6 @@ static int fts_pm(int resume, int gesture)
 	ret = resume ? fts_ts_resume(fts_data->dev) : fts_ts_suspend(fts_data->dev);
 	if (resume)
 		fts_data->gesture_support = !!gesture;
-	if (!ret && !resume && fts_data->gesture_support) {
-		if (fts_data->scp_registered && !fts_data->scp_mistouch_close)
-			xiaomi_touch_scp_switch(true, (gesture & 1) << 2 | (gesture >> 1 & 3));
-		else if (fts_data->scp_mistouch_close) {
-			u8 state = 0xff;
-			int retry;
-
-			for (retry = 0; retry < 5; retry++) {
-				fts_write_reg(0xbf, 0);
-				msleep(1);
-				if (!fts_read_reg(0xbf, &state) && !state)
-					break;
-			}
-		}
-	}
 	if (!ret && resume) {
 		fts_thermal(0, true);
 		if (fts_data->raw_enabled)
@@ -326,7 +299,6 @@ static int fts_set_value(int mode, int *value)
 
 	switch (mode) {
 	case 103:
-		fts_data->scp_mistouch_close = !value[0];
 		return 0;
 	case 200: {
 		int unsupported = -1;
@@ -457,29 +429,6 @@ static void focal_fod_test(int value)
 	input_sync(input);
 }
 
-static void focal_scp_gesture(void *context)
-{
-	struct fts_ts_data *ts = context;
-
-	pm_stay_awake(ts->dev);
-	fts_read_and_report_foddata(ts);
-	fts_gesture_readdata(ts, NULL);
-	pm_relax(ts->dev);
-}
-
-static void focal_scp_irq(void *context, bool scp)
-{
-	struct fts_ts_data *ts = context;
-
-	if (scp) {
-		fts_irq_disable();
-		synchronize_irq(ts->irq);
-	} else
-		fts_irq_enable();
-	if (ts->suspended && ts->gesture_support)
-		irq_set_irq_wake(ts->irq, !scp);
-}
-
 static int focal_dfs_test(int code)
 {
 	const char *fault;
@@ -525,13 +474,6 @@ int fts_rodin_register(struct fts_ts_data *ts)
 	};
 	u32 factor = 100;
 	int ret;
-	const struct xiaomi_touch_scp_param scp_param = {
-		.vendor = 2, .gesture_address = 0xd3, .gesture_size = 26,
-		.fod_address = 0xe1, .fod_size = 9, .frame_address = 1, .frame_size = 0xc30,
-	};
-	const struct xiaomi_touch_scp_ops scp_ops = {
-		.gesture = focal_scp_gesture, .irq_owner = focal_scp_irq,
-	};
 
 	of_property_read_u32(ts->dev->of_node, "focaltech,super-resolution-factors", &factor);
 	param.super_resolution_factor = factor;
@@ -539,15 +481,9 @@ int fts_rodin_register(struct fts_ts_data *ts)
 	strscpy(param.config_file_name, "rodin_fts_thp_config.ini", sizeof(param.config_file_name));
 	strscpy(param.driver_version, "FT3683:2025.04.23-001", sizeof(param.driver_version));
 	fts_version(param.fw_version);
-	ret = xiaomi_touch_scp_register(ts->dev, ts->pinctrl, &scp_param, &scp_ops, ts);
-	ts->scp_registered = !ret;
 	ret = register_touch_panel_common(ts->dev, 0, &param, &ops);
-	if (ret) {
-		if (ts->scp_registered)
-			xiaomi_touch_scp_unregister();
-		ts->scp_registered = false;
+	if (ret)
 		return ret;
-	}
 	ts->common_registered = true;
 	WRITE_ONCE(ts->raw_enabled, true);
 	init_touch_irq(0, ts->dev->of_node);

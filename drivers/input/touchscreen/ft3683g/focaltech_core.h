@@ -210,8 +210,6 @@ struct tp_info {
 
 struct fts_ts_data {
 	bool common_registered;
-	bool scp_registered;
-	bool scp_mistouch_close;
 	bool raw_enabled;
 	u32 raw_debug_type;
 	u64 raw_frame_count;

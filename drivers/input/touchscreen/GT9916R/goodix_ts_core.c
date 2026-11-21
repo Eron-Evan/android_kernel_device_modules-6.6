@@ -39,7 +39,6 @@
 #endif
 
 #include "goodix_ts_core.h"
-#include "../xiaomi_touch/xiaomi_touch_scp.h"
 //#include "mi_disp_notifier.h"
 
 #define GOODIX_DEFAULT_CFG_NAME	"goodix_cfg_group.cfg"
@@ -807,8 +806,6 @@ static ssize_t goodix_ts_debug_log_store(struct device *dev,
 	}
 	goodix_debug_log_level = (unsigned char)buf[0] - '0';
 	debug_log_flag = goodix_debug_log_level > 3;
-	if (!goodix_core_data->scp_mistouch_close)
-		xiaomi_touch_scp_log_level(goodix_debug_log_level);
 	return count;
 }
 
@@ -4252,10 +4249,6 @@ static int goodix_ts_remove(struct platform_device *pdev)
 	}
 	if (core_data->common_registered)
 		xiaomi_touch_stop_panel_common(0);
-	if (core_data->scp_registered) {
-		xiaomi_touch_scp_unregister();
-		core_data->scp_registered = false;
-	}
 	if (core_data->init_stage >= CORE_INIT_STAGE2) {
 		hw_ops->irq_enable(core_data, false);
 		synchronize_irq(core_data->irq);

@@ -668,8 +668,6 @@ enum ts_work_stat {
 };
 struct goodix_ts_core {
 	bool common_registered;
-	bool scp_registered;
-	bool scp_mistouch_close;
 	bool raw_enabled;
 	bool self_config_enabled;
 	unsigned int self_config_pending;

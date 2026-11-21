@@ -52,7 +52,6 @@
 #define FTS_SUSPEND_LEVEL 1     /* Early-suspend level */
 #endif
 #include "focaltech_core.h"
-#include "../xiaomi_touch/xiaomi_touch_scp.h"
 
 #include <linux/power_supply.h>
 #include <uapi/linux/sched/types.h>
@@ -3437,10 +3436,6 @@ static int fts_ts_remove_entry(struct fts_ts_data *ts_data)
 {
 	if (ts_data->common_registered)
 		xiaomi_touch_stop_panel_common(0);
-	if (ts_data->scp_registered) {
-		xiaomi_touch_scp_unregister();
-		ts_data->scp_registered = false;
-	}
 	fts_irq_disable();
 	synchronize_irq(ts_data->irq);
 	if (ts_data->common_registered) {
@@ -3794,10 +3789,6 @@ static void fts_ts_shutdown(struct spi_device *spi)
     if (fts_data) {
         if (fts_data->common_registered)
             xiaomi_touch_stop_panel_common(0);
-        if (fts_data->scp_registered) {
-            xiaomi_touch_scp_unregister();
-            fts_data->scp_registered = false;
-        }
         fts_irq_disable();
         synchronize_irq(fts_data->irq);
         if (fts_data->common_registered) {

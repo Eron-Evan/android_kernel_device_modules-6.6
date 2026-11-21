@@ -28,7 +28,6 @@
 #include <linux/atomic.h>
 #include <linux/input/mt.h>
 #include "goodix_ts_core.h"
-#include "../xiaomi_touch/xiaomi_touch_scp.h"
 #include <asm/unaligned.h>
 
 #define QUERYBIT(longlong, bit) (!!(longlong[bit/8] & (1 << bit%8)))
@@ -307,8 +306,7 @@ static int gsx_gesture_ist(struct goodix_ts_core *cd,
 		input_sync(input);
 	}
 retry:
-	if (!xiaomi_touch_scp_owned())
-		ops->gesture(cd, cd->gesture_enabled);
+	ops->gesture(cd, cd->gesture_enabled);
 out:
 	mutex_unlock(&cd->report_mutex);
 	return EVT_CANCEL_IRQEVT;

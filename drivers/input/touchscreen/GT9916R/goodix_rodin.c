@@ -4,7 +4,6 @@
 #include <linux/rtc.h>
 #include <linux/vmalloc.h>
 #include "goodix_ts_core.h"
-#include "../xiaomi_touch/xiaomi_touch_scp.h"
 
 extern struct goodix_ts_core *goodix_core_data;
 int goodix_short_open_test(void);
@@ -15,8 +14,6 @@ static int goodix_log_level(int level)
 {
 	goodix_debug_log_level = level;
 	debug_log_flag = level > 3;
-	if (!goodix_core_data->scp_mistouch_close)
-		xiaomi_touch_scp_log_level(level);
 	return level;
 }
 
@@ -212,20 +209,13 @@ static void goodix_switch_gesture(int gestures)
 	struct goodix_ts_core *cd = goodix_core_data;
 
 	goodix_gesture_state(gestures);
-	if (xiaomi_touch_scp_owned()) {
-		xiaomi_touch_scp_update_gesture(cd->gesture_enabled, cd->nonui_status);
-		return;
-	}
 	if (!atomic_read(&cd->suspended))
 		return;
 	mutex_lock(&cd->sleep_to_gesture_mutex);
-	if (cd->gesture_enabled && cd->work_status == TP_SLEEP) {
+	if (cd->gesture_enabled && cd->work_status == TP_SLEEP)
 		goodix_sleep_to_gesture(cd);
-		if (cd->scp_registered && !cd->scp_mistouch_close)
-			xiaomi_touch_scp_switch(true, cd->gesture_enabled);
-	} else {
+	else
 		cd->hw_ops->gesture(cd, cd->gesture_enabled);
-	}
 	mutex_unlock(&cd->sleep_to_gesture_mutex);
 }
 
@@ -234,20 +224,9 @@ static int goodix_pm(int resume, int gestures)
 	struct goodix_ts_core *cd = goodix_core_data;
 	int ret;
 
-	if (resume && xiaomi_touch_scp_owned())
-		xiaomi_touch_scp_switch(false, cd->gesture_enabled);
 	enable_temperature_detection_func(!!resume);
 	goodix_gesture_state(gestures);
 	ret = resume ? goodix_ts_resume(cd) : goodix_ts_suspend(cd);
-	if (!ret && !resume && gestures) {
-		if (cd->scp_registered && !cd->scp_mistouch_close)
-			xiaomi_touch_scp_switch(true, cd->gesture_enabled);
-		else if (cd->scp_mistouch_close) {
-			struct goodix_ts_cmd cmd = { .cmd = 0x13, .len = 5, .data = { 1 } };
-
-			cd->hw_ops->send_cmd(cd, &cmd);
-		}
-	}
 	if (!ret && resume && cd->raw_debug_type) {
 		struct goodix_ts_cmd cmd = { .cmd = 0xcd, .len = 5, .data = { 1 } };
 
@@ -270,7 +249,6 @@ static int goodix_set_value(int mode, int *values)
 		cd->self_config_pending = 1;
 		return 0;
 	case 103:
-		cd->scp_mistouch_close = !value;
 		return 0;
 	case 200: {
 		int unsupported = -1;
@@ -472,26 +450,6 @@ static void goodix_game_update(u64 changed, int *values)
 	mutex_unlock(&cd->core_mutex);
 }
 
-static void goodix_scp_gesture(void *context)
-{
-	struct goodix_ts_core *cd = context;
-
-	pm_stay_awake(cd->bus->dev);
-	goodix_rodin_gesture(cd);
-	pm_relax(cd->bus->dev);
-}
-
-static void goodix_scp_irq(void *context, bool scp)
-{
-	struct goodix_ts_core *cd = context;
-
-	cd->hw_ops->irq_enable(cd, !scp);
-	if (scp)
-		synchronize_irq(cd->irq);
-	if (atomic_read(&cd->suspended) && cd->gesture_enabled)
-		irq_set_irq_wake(cd->irq, !scp);
-}
-
 static int goodix_dfs_test(int code)
 {
 	const char *fault;
@@ -538,14 +496,6 @@ int goodix_rodin_register(struct goodix_ts_core *cd)
 	};
 	u32 factor = 100;
 	int ret;
-	struct xiaomi_touch_scp_param scp_param = {
-		.vendor = 1, .gesture_address = cd->ic_info.misc.touch_data_addr,
-		.acknowledge_address = cd->ic_info.misc.cmd_addr, .gesture_size = 32,
-		.frame_address = cd->ic_info.misc.frame_data_addr, .frame_size = 2500,
-	};
-	const struct xiaomi_touch_scp_ops scp_ops = {
-		.gesture = goodix_scp_gesture, .irq_owner = goodix_scp_irq,
-	};
 
 	of_property_read_u32(cd->bus->dev->of_node, "goodix,super-resolution-factor", &factor);
 	param.super_resolution_factor = factor;
@@ -553,16 +503,9 @@ int goodix_rodin_register(struct goodix_ts_core *cd)
 	strscpy(param.config_file_name, "rodin_gtp_thp_config.ini", sizeof(param.config_file_name));
 	strscpy(param.driver_version, "gt9916-2025.07.24-01", sizeof(param.driver_version));
 	goodix_version_read(param.fw_version);
-	ret = xiaomi_touch_scp_register(cd->bus->dev, cd->pinctrl,
-				       &scp_param, &scp_ops, cd);
-	cd->scp_registered = !ret;
 	ret = register_touch_panel_common(cd->bus->dev, 0, &param, &ops);
-	if (ret) {
-		if (cd->scp_registered)
-			xiaomi_touch_scp_unregister();
-		cd->scp_registered = false;
+	if (ret)
 		return ret;
-	}
 	cd->common_registered = true;
 	WRITE_ONCE(cd->raw_enabled, true);
 	init_touch_irq(0, cd->bus->dev->of_node);
