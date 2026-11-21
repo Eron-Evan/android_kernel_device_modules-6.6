@@ -106,6 +106,14 @@ module_param(debug_pu_wait, int, 0644);
 int bif_mode;
 module_param(bif_mode, int, 0644);
 
+#ifdef CONFIG_MI_DISP
+#include "mi_disp/mi_dsi_panel.h"
+#include "mtk_dsi.h"
+#endif
+
+ #ifdef CONFIG_MI_DISP_FOD_SYNC
+ #include "mi_disp/mi_drm_crtc.h"
+ #endif
 static struct mtk_drm_property mtk_crtc_property[CRTC_PROP_MAX] = {
 	{DRM_MODE_PROP_ATOMIC, "OVERLAP_LAYER_NUM", 0, ULONG_MAX, 0},
 	{DRM_MODE_PROP_ATOMIC, "LAYERING_IDX", 0, ULONG_MAX, 0},
@@ -157,6 +165,13 @@ static void mmqos_hrt_dump(void);
 bool hdr_en;
 static const char * const crtc_gce_client_str[] = {
 	DECLARE_GCE_CLIENT(DECLARE_STR)};
+
+#ifdef CONFIG_MI_DISP_CMDQ_SWT
+struct timer_list cmdq_timer;
+static int cmdq_cnt = 0;
+bool tigger_esd = false;
+#define CMDQ_TIMEOUT_CNT 5
+#endif
 
 /* For Msync2.0 CPU and GCE wait EPT */
 unsigned long long flush_add_delay_time;
@@ -2829,6 +2844,8 @@ int mtk_drm_setbacklight(struct drm_crtc *crtc, unsigned int level,
 		cmdq_pkt_wfe(cmdq_handle,
 			mtk_crtc->gce_obj.event[EVENT_CABC_EOF]);
 	}
+	/* Record Vblank start timestamp */
+	mtk_vblank_config_rec_start(mtk_crtc, cmdq_handle, SET_BL);
 
 	/* Record Vblank start timestamp */
 	mtk_vblank_config_rec_start(mtk_crtc, cmdq_handle, SET_BL);
@@ -2836,7 +2853,6 @@ int mtk_drm_setbacklight(struct drm_crtc *crtc, unsigned int level,
 	if ((panel_ext) && (panel_ext->SilkyBrightnessDelay)
 		&& (drm_mode_vrefresh(&crtc->state->adjusted_mode) == 60))
 		cmdq_pkt_sleep(cmdq_handle, CMDQ_US_TO_TICK(panel_ext->SilkyBrightnessDelay), CMDQ_GPR_R06);
-
 	/* set backlight */
 	oddmr_comp = priv->ddp_comp[DDP_COMPONENT_ODDMR0];
 	mtk_ddp_comp_io_cmd(oddmr_comp, cmdq_handle, ODDMR_BL_CHG, &level);
@@ -8797,20 +8813,38 @@ static int _mtk_crtc_cmdq_smi_info_dump(void *data)
 	return 0;
 }
 
+#ifdef CONFIG_MI_DISP_CMDQ_SWT
+static void cmdq_timer_hander(struct timer_list *t)
+{
+	if (cmdq_cnt >= CMDQ_TIMEOUT_CNT) {
+		tigger_esd = true;
+	}
+	DDPPR_ERR("%s -- timeout cnt=%d\n", __func__,cmdq_cnt);
+	cmdq_cnt = 0;
+}
+#endif
+
 static void mtk_crtc_cmdq_timeout_cb(struct cmdq_cb_data data)
 {
 	struct drm_crtc *crtc = data.data;
 	struct mtk_drm_private *priv = NULL;
 	int id;
 
+#ifdef CONFIG_MI_DISP_CMDQ_SWT
+	static int once_value = 0;
+	struct mi_esd_ctx *mi_esd_ctx = NULL;
+#endif
+
 #ifndef DRM_CMDQ_DISABLE
 	struct mtk_drm_crtc *mtk_crtc = to_mtk_crtc(crtc);
 	struct cmdq_client *client = mtk_crtc->gce_obj.client[CLIENT_CFG];
 	struct cmdq_client *cl;
-	dma_addr_t trig_pc;
+	dma_addr_t trig_pc = 0;
+	dma_addr_t event_pc = 0;
 	u64 *inst;
 	static DEFINE_RATELIMIT_STATE(timeout_rate, 30 * HZ, 1);
 #endif
+
 
 	if (!crtc) {
 		DDPPR_ERR("%s find crtc fail\n", __func__);
@@ -8831,6 +8865,38 @@ static void mtk_crtc_cmdq_timeout_cb(struct cmdq_cb_data data)
 
 	DDPPR_ERR("%s cmdq timeout, crtc id:%d\n", __func__,
 		drm_crtc_index(crtc));
+
+#ifdef CONFIG_MI_DISP_CMDQ_SWT
+	if (!drm_crtc_index(crtc)) {
+		mi_esd_ctx = mtk_crtc->mi_esd_ctx;
+		if (mi_esd_ctx && !atomic_read(&mi_esd_ctx->err_flag_event)) {
+			DDPPR_ERR("%s--cmdq timeout cnt=%d\n", __func__, cmdq_cnt);
+			if (!once_value) {
+				timer_setup(&cmdq_timer,cmdq_timer_hander,0);
+				cmdq_timer.expires = jiffies + 2*CMDQ_TIMEOUT_CNT*HZ;
+				add_timer(&cmdq_timer);
+				once_value = 1;
+			} else if (!cmdq_cnt && !tigger_esd) {
+				cmdq_timer.expires = jiffies + 2*CMDQ_TIMEOUT_CNT*HZ;
+				add_timer(&cmdq_timer);
+			}
+
+			cmdq_cnt++;
+			if (cmdq_cnt == CMDQ_TIMEOUT_CNT && 1 == once_value) {
+				once_value = 2;
+				DDPAEE_FATAL("%s cmdq timeout 5, crtc id:%d\n", __func__, drm_crtc_index(crtc));
+			}
+
+			if (tigger_esd) {
+				atomic_set(&mi_esd_ctx->err_flag_event, 1);
+				wake_up_interruptible(&mi_esd_ctx->err_flag_wq);
+				DDPPR_ERR("%s cmdq timeout triger ESD recovery\n", __func__);
+				cmdq_cnt = 0;
+				tigger_esd = false;
+			}
+		}
+	}
+#endif
 
 	if (!__ratelimit(&timeout_rate))
 		return;
@@ -8863,6 +8929,16 @@ static void mtk_crtc_cmdq_timeout_cb(struct cmdq_cb_data data)
 		cmdq_dump_pkt(mtk_crtc->trig_loop_cmdq_handle, trig_pc, true);
 
 		DDPMSG("------ Dump trigger loop ------\n");
+	}
+	if ((mtk_crtc->event_loop_cmdq_handle) &&
+			(mtk_crtc->event_loop_cmdq_handle->cl)) {
+		cl = (struct cmdq_client *)mtk_crtc->event_loop_cmdq_handle->cl;
+		DDPMSG("++++++ Dump event loop ++++++\n");
+		cmdq_thread_dump(cl->chan, mtk_crtc->event_loop_cmdq_handle,
+				&inst, &event_pc);
+		cmdq_dump_pkt(mtk_crtc->event_loop_cmdq_handle, event_pc, true);
+
+		DDPMSG("------ Dump event loop ------\n");
 	}
 	atomic_set(&mtk_crtc->cmdq_trig, 1);
 #endif
@@ -10528,6 +10604,7 @@ static void ddp_cmdq_cb(struct cmdq_cb_data data)
 	unsigned int *avg = NULL;
 	unsigned int *peak = NULL;
 	unsigned int reg_avg, reg_peak;
+	unsigned int time_0, time_1, time_2, time_3;
 	int crtc_state_stylus = to_mtk_crtc_state(crtc_state)->prop_val[CRTC_PROP_STYLUS];
 
 	if (unlikely(!mtk_crtc)) {
@@ -10617,6 +10694,15 @@ static void ddp_cmdq_cb(struct cmdq_cb_data data)
 		if (ovl_status & 1) {
 			CRTC_MMP_MARK(id, ovl_status_err, ovl_status, 0);
 			DDPPR_ERR("ovl status error:0x%x\n", ovl_status);
+			time_0 = cmdq_mbox_get_tpr_from_dram(cb_data->cmdq_handle, 0);
+			time_1 = cmdq_mbox_get_tpr_from_dram(cb_data->cmdq_handle, 1);
+			time_2 = cmdq_mbox_get_tpr_from_dram(cb_data->cmdq_handle, 2);
+			time_3 = cmdq_mbox_get_tpr_from_dram(cb_data->cmdq_handle, 3);
+			DDPPR_ERR("pkt create -> wait event = %d us\n", (time_2 - time_0) / 26);
+			DDPPR_ERR("start wait event -> wait event done = %d us\n", (time_3 - time_2) / 26);
+			DDPPR_ERR("wait event done -> pkt done = %d us\n", (time_1 - time_3) / 26);
+			DDPPR_ERR("pkt create -> pkt done = %d us\n", (time_1 - time_0) / 26);
+			cmdq_pkt_dump_buf(cb_data->cmdq_handle, 0);
 			mtk_dprec_snapshot();
 			if (priv->data->mmsys_id == MMSYS_MT6985 ||
 				priv->data->mmsys_id == MMSYS_MT6989 ||
@@ -11013,7 +11099,9 @@ int mtk_crtc_comp_is_busy(struct mtk_drm_crtc *mtk_crtc)
 /* TODO: need to remove this in vdo mode for lowpower */
 static void trig_done_cb(struct cmdq_cb_data data)
 {
-	CRTC_MMP_MARK((unsigned long)data.data, trig_loop_done, 0, 0);
+	struct mtk_drm_crtc *cb_data = (struct mtk_drm_crtc *)data.data;
+
+	CRTC_MMP_MARK((unsigned long)cb_data->trig_loop_cmdq_handle, trig_loop_done, 0, 0);
 	DRM_MMP_EVENT_END(drm, 0, 0);
 	drm_trace_tag_mark("trig_loop_done");
 	// DDPINFO("%s()\n", __func__);
@@ -12229,7 +12317,7 @@ skip_prete:
 	}
 	GCE_DO(set_event, EVENT_MML_DISP_DONE_EVENT);
 	cmdq_pkt_finalize_loop(cmdq_handle);
-	ret = cmdq_pkt_flush_async(cmdq_handle, trig_done_cb, (void *)crtc_id);
+	ret = cmdq_pkt_flush_async(cmdq_handle, trig_done_cb, (void *)mtk_crtc);
 
 	mtk_crtc_clear_wait_event(crtc);
 #endif
@@ -13652,6 +13740,18 @@ void mtk_crtc_check_trigger(struct mtk_drm_crtc *mtk_crtc, bool delay,
 		panel_ext && panel_ext->params->doze_delay > 1){
 		DDPINFO("%s:%d, doze not to trigger\n", __func__, __LINE__);
 		goto err;
+	}
+	if (type) {
+		DDPINFO("%s:%d, trigger type %d\n", __func__, __LINE__, type);
+		CRTC_MMP_MARK(index, kick_trigger, 0xFF, type);
+		if (type == 1)
+			delay = true;
+		else if (type == 2)
+			goto err;
+		else if (type == 3) {
+			drm_trigger_repaint(DRM_REPAINT_FOR_IDLE, crtc->dev);
+			goto err;
+		}
 	}
 
 	if (type) {
@@ -16424,6 +16524,9 @@ struct cmdq_pkt *mtk_crtc_gce_commit_begin(struct drm_crtc *crtc,
 			mtk_crtc_pkt_create(&cmdq_handle, crtc,
 				mtk_crtc->gce_obj.client[CLIENT_CFG]);
 	}
+#if !IS_ENABLED(CONFIG_MTK_DISP_DEBUG)
+	cmdq_pkt_save_tpr_to_dram(cmdq_handle, 0);
+#endif
 
 #if !IS_ENABLED(CONFIG_DRM_MEDIATEK_AUTO_YCT)
 	if (crtc_id == 0)
@@ -16469,7 +16572,7 @@ struct cmdq_pkt *mtk_crtc_gce_commit_begin(struct drm_crtc *crtc,
 		if (!mtk_crtc_with_trigger_loop(crtc))
 			clear_event = 1;
 #endif
-
+		cmdq_pkt_save_tpr_to_dram(cmdq_handle, 2);
 		mtk_crtc_wait_frame_done(mtk_crtc, cmdq_handle, DDP_FIRST_PATH, clear_event);
 		mtk_crtc_partial_update_wait_cabc(crtc, cmdq_handle);
 	}
@@ -20522,6 +20625,9 @@ static void mtk_drm_crtc_atomic_flush(struct drm_crtc *crtc,
 #endif
 
 	mtk_drm_idlemgr_kick(__func__, crtc, false); /* update kick timestamp */
+#if !IS_ENABLED(CONFIG_MTK_DISP_DEBUG)
+	cmdq_pkt_save_tpr_to_dram(cmdq_handle, 1);
+#endif
 
 #ifndef DRM_CMDQ_DISABLE
 #ifdef MTK_DRM_CMDQ_ASYNC
@@ -22318,6 +22424,9 @@ int mtk_drm_crtc_create(struct drm_device *drm_dev,
 		mtk_drm_cwb_init(&mtk_crtc->base);
 
 	mtk_disp_chk_recover_init(&mtk_crtc->base);
+#ifdef CONFIG_MI_DISP_ESD_CHECK
+	mi_disp_esd_chk_init(&mtk_crtc->base);
+#endif
 
 	if (output_comp && mtk_ddp_comp_get_type(output_comp->id) == MTK_DSI)
 		mtk_drm_fake_vsync_init(&mtk_crtc->base);

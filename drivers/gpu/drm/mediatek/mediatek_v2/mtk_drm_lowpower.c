@@ -20,6 +20,7 @@
 #include "mtk_drm_crtc.h"
 #include "mtk_drm_drv.h"
 #include "mtk_drm_ddp.h"
+#include "mtk_drm_graphics_base.h"
 #include "mtk_drm_ddp_comp.h"
 #include "mtk_drm_fb.h"
 #include "mtk_drm_gem.h"
@@ -1610,6 +1611,28 @@ static bool mtk_planes_is_yuv_fmt(struct drm_crtc *crtc)
 
 		if (plane_state->comp_state.layer_caps & MTK_DISP_SRC_YUV_LAYER)
 			return true;
+	}
+
+	return false;
+}
+
+static bool mtk_planes_is_p3_extended_fmt(struct drm_crtc *crtc)
+{
+	struct mtk_drm_crtc *mtk_crtc = to_mtk_crtc(crtc);
+	int i;
+
+	for (i = 0; i < mtk_crtc->layer_nr; i++) {
+		struct drm_plane *plane = &mtk_crtc->planes[i].base;
+		struct mtk_plane_state *plane_state =
+			to_mtk_plane_state(plane->state);
+		struct mtk_plane_pending_state *pending = &plane_state->pending;
+		unsigned int ds = pending->prop_val[PLANE_PROP_DATASPACE];
+
+		if (pending->enable && (ds == (MTK_DRM_DATASPACE_STANDARD_DCI_P3 |
+							MTK_DRM_DATASPACE_RANGE_EXTENDED |
+							MTK_DRM_DATASPACE_TRANSFER_SRGB)))
+			return true;
+
 	}
 
 	return false;

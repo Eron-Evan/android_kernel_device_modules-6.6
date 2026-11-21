@@ -72,6 +72,10 @@ mediatek-drm-y := mtk_drm_drv.o \
 #ccflags-y += -DDRM_CMDQ_DISABLE
 #mediatek-drm-y += mtk_cmdq_dummy.o
 
+ifeq ($(CONFIG_MI_DISP),y)
+    include $(DEVICE_MODULES_PATH)/drivers/gpu/drm/mediatek/mediatek_v2/mi_disp/Makefile
+endif
+
 ifeq ($(CONFIG_DRM_MEDIATEK_AUTO), y)
 ccflags-y += -DMTK_AUTO_PRODUCT
 mediatek-drm-y += mtk_drm_auto/mtk_drm_ddp_comp_auto.o \
@@ -151,7 +155,8 @@ mediatek-drm-hdmi-objs := mtk_hdmi.o \
 	mtk_hdmi_ca.o \
 	mtk_hdmi_hdr.o \
 	mtk_hdmi_edid.o \
-	mtk_hdmi_debug.o
+	mtk_hdmi_debug.o \
+	
 
 ifneq ($(findstring $(CONFIG_DRM_MEDIATEK_HDMI_HDCP), y m),)
 ccflags-y += -I$(srctree)/drivers/misc/mediatek/hdmirx/
@@ -235,3 +240,4 @@ ccflags-y += -DDISP_MDP_COLOR_ON
 
 subdir-ccflags-y += -I$(DEVICE_MODULES_PATH)/drivers/misc/mediatek/include/
 subdir-ccflags-y += -I$(DEVICE_MODULES_PATH)/drivers/misc/mediatek/include/mt-plat/
+subdir-ccflags-y += -I$(DEVICE_MODULES_PATH)/drivers/gpu/drm/mediatek/mediatek_v2/

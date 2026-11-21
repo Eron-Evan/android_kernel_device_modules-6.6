@@ -32,7 +32,9 @@
 #include "mtk_disp_pmqos.h"
 #include "slbc_ops.h"
 #include "mtk_disp_pq_helper.h"
-
+#ifdef CONFIG_MI_DISP
+#include "mi_disp/mi_disp_esd_check.h"
+#endif
 #if IS_ENABLED(CONFIG_ARM64)
 #if IS_ENABLED(CONFIG_DRM_MEDIATEK_AUTO_YCT)
 #define MAX_CRTC 7
@@ -1299,6 +1301,10 @@ struct mtk_drm_crtc {
 	bool recovery_flg;
 	atomic_t underrun_recovery_level;
 	wait_queue_head_t signal_underrun_recovery_wq;
+
+#ifdef CONFIG_MI_DISP_ESD_CHECK
+	struct mi_esd_ctx *mi_esd_ctx;
+#endif
 
 	int dli_relay_1tnp;
 
