@@ -4,7 +4,7 @@ ifneq ($(CONFIG_DEVICE_MODULES_ALLOW_BUILTIN),y)
 
 LINUXINCLUDE := $(DEVCIE_MODULES_INCLUDE) $(LINUXINCLUDE)
 
-subdir-ccflags-y += -Wall -Werror \
+subdir-ccflags-y += -Werror \
 		-I$(srctree)/$(src)/include \
 		-I$(srctree)/$(src)/include/uapi \
 
@@ -80,7 +80,7 @@ obj-y += drivers/tee/
 
 obj-y += drivers/gpu/drm/mediatek/
 
-obj-y += drivers/input/touchscreen/
+# obj-y += drivers/input/touchscreen/
 
 obj-y += drivers/input/fingerprint/
 
@@ -102,6 +102,8 @@ obj-y += drivers/devfreq/
 
 obj-y += drivers/misc/mediatek/
 
+obj-y += drivers/misc/xiaomi/
+
 obj-y += sound/soc/codecs/
 
 obj-y += sound/soc/mediatek/
@@ -111,5 +113,8 @@ obj-y += sound/virtio/
 obj-y += drivers/pci/controller/
 
 obj-y += drivers/video/backlight/
+
+obj-y += drivers/input/misc/
+
 
 endif
