@@ -700,6 +700,9 @@ void set_boot_phase(u32 step)
 	int ret = 0;
 #endif
 
+	if (!sram_header)
+		return;
+
 	if (sram_header->reserve[SRAM_PMIC_BOOT_PHASE] == FLAG_ENABLE) {
 		set_pmic_boot_phase(step);
 		if (last_boot_phase == 0)
