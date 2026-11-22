@@ -628,7 +628,6 @@ mgk_64_device_modules = [
     "drivers/misc/mediatek/vcp/rv_v2/vcp_v2.ko",
     "drivers/misc/mediatek/vcp/rv_v2/vcp_status_v2.ko",
     "drivers/misc/mediatek/vdec_fmt/vdec-fmt.ko",
-    "drivers/misc/mediatek/videogo/videogo.ko",
     "drivers/misc/mediatek/vmm/mtk-vmm-notifier.ko",
     "drivers/misc/mediatek/vmm_spm/mtk-vmm-spm.ko",
     "drivers/misc/mediatek/vow/ver02/mtk-vow.ko",
@@ -1298,7 +1297,6 @@ def get_overlay_modules_list():
         mgk_64_device_modules.remove("drivers/misc/mediatek/vcp/rv/vcp.ko")
         mgk_64_device_modules.remove("drivers/misc/mediatek/vcp/rv/vcp_status.ko")
         mgk_64_device_modules.remove("drivers/misc/mediatek/vdec_fmt/vdec-fmt.ko")
-        mgk_64_device_modules.remove("drivers/misc/mediatek/videogo/videogo.ko")
         mgk_64_device_modules.remove("drivers/media/platform/mtk-vcodec/mtk-vcodec-dec-v2.ko")
         mgk_64_device_modules.remove("drivers/media/platform/mtk-vcodec/mtk-vcodec-enc-v2.ko")
         mgk_64_device_modules.remove("drivers/soc/mediatek/mtk-mmdvfs-v3.ko")
@@ -1499,7 +1497,6 @@ def get_overlay_modules_list():
         mgk_64_device_modules.remove("drivers/media/platform/mtk-vcodec/mtk-vcodec-dec-v2.ko")
         mgk_64_device_modules.remove("drivers/media/platform/mtk-vcodec/mtk-vcodec-enc-v2.ko")
         mgk_64_device_modules.remove("drivers/soc/mediatek/mtk-mmdvfs-v3.ko")
-        mgk_64_device_modules.remove("drivers/misc/mediatek/videogo/videogo.ko")
         mgk_64_platform_device_modules.pop("drivers/clk/mediatek/clk-chk-mt6989.ko")
         mgk_64_platform_device_modules.pop("drivers/clk/mediatek/pd-chk-mt6989.ko")
         mgk_64_platform_device_modules.pop("drivers/clk/mediatek/clk-chk-mt6991.ko")
@@ -1930,7 +1927,6 @@ def get_overlay_modules_list():
         mgk_64_device_modules.remove("drivers/misc/mediatek/vcp/rv/vcp_status.ko")
 
         mgk_64_device_modules.remove("drivers/misc/mediatek/vdec_fmt/vdec-fmt.ko")
-        mgk_64_device_modules.remove("drivers/misc/mediatek/videogo/videogo.ko")
 
         mgk_64_device_modules.remove("drivers/misc/mediatek/vow/ver02/mtk-vow.ko")
 
@@ -2341,7 +2337,6 @@ def get_overlay_modules_list():
         mgk_64_device_modules.remove("drivers/misc/mediatek/vcp/rv/vcp.ko")
         mgk_64_device_modules.remove("drivers/misc/mediatek/vcp/rv/vcp_status.ko")
         mgk_64_device_modules.remove("drivers/misc/mediatek/vdec_fmt/vdec-fmt.ko")
-        mgk_64_device_modules.remove("drivers/misc/mediatek/videogo/videogo.ko")
         mgk_64_device_modules.remove("drivers/media/platform/mtk-vcodec/mtk-vcodec-dec-v2.ko")
         mgk_64_device_modules.remove("drivers/media/platform/mtk-vcodec/mtk-vcodec-enc-v2.ko")
         mgk_64_device_modules.remove("drivers/media/platform/mtk-vcodec/mtk-vcodec-dec-v1.ko")
@@ -2833,7 +2828,6 @@ def get_overlay_modules_list():
         mgk_64_device_modules.append("drivers/misc/mediatek/videocodec/vcodec_kernel_common_driver.ko")
         mgk_64_device_modules.append("drivers/misc/mediatek/videocodec/vcodec_kernel_driver-v1.ko")
         mgk_64_device_modules.remove("drivers/misc/mediatek/vdec_fmt/vdec-fmt.ko")
-        mgk_64_device_modules.remove("drivers/misc/mediatek/videogo/videogo.ko")
         mgk_64_device_modules.remove("drivers/media/platform/mtk-vcodec/mtk-vcodec-dec-v2.ko")
         mgk_64_device_modules.remove("drivers/media/platform/mtk-vcodec/mtk-vcodec-enc-v2.ko")
         mgk_64_device_modules.remove("drivers/misc/mediatek/vcp/rv/vcp.ko")
@@ -3144,7 +3138,6 @@ def get_overlay_modules_list():
         mgk_64_device_modules.remove("drivers/misc/mediatek/vcp/rv/vcp.ko")
         mgk_64_device_modules.remove("drivers/misc/mediatek/vcp/rv/vcp_status.ko")
         mgk_64_device_modules.remove("drivers/misc/mediatek/vdec_fmt/vdec-fmt.ko")
-        mgk_64_device_modules.remove("drivers/misc/mediatek/videogo/videogo.ko")
         mgk_64_device_modules.remove("drivers/media/platform/mtk-vcodec/mtk-vcodec-dec-v1.ko")
         mgk_64_device_modules.remove("drivers/media/platform/mtk-vcodec/mtk-vcodec-enc-v1.ko")
         mgk_64_device_modules.remove("drivers/soc/mediatek/mtk-mmdvfs-v3.ko")
@@ -3414,7 +3407,6 @@ def get_overlay_modules_list():
         mgk_64_device_modules.append("drivers/misc/mediatek/videocodec/vcodec_kernel_common_driver.ko")
         mgk_64_device_modules.append("drivers/misc/mediatek/videocodec/vcodec_kernel_driver-v1.ko")
         mgk_64_device_modules.remove("drivers/misc/mediatek/vdec_fmt/vdec-fmt.ko")
-        mgk_64_device_modules.remove("drivers/misc/mediatek/videogo/videogo.ko")
         mgk_64_device_modules.remove("drivers/media/platform/mtk-vcodec/mtk-vcodec-dec-v2.ko")
         mgk_64_device_modules.remove("drivers/media/platform/mtk-vcodec/mtk-vcodec-enc-v2.ko")
 
@@ -3735,7 +3727,6 @@ def get_overlay_modules_list():
         mgk_64_device_modules.remove("drivers/misc/mediatek/vcp/rv/vcp.ko")
         mgk_64_device_modules.remove("drivers/misc/mediatek/vcp/rv/vcp_status.ko")
         mgk_64_device_modules.remove("drivers/misc/mediatek/vdec_fmt/vdec-fmt.ko")
-        mgk_64_device_modules.remove("drivers/misc/mediatek/videogo/videogo.ko")
         mgk_64_device_modules.remove("drivers/media/platform/mtk-vcodec/mtk-vcodec-dec-v2.ko")
         mgk_64_device_modules.remove("drivers/media/platform/mtk-vcodec/mtk-vcodec-enc-v2.ko")
         mgk_64_device_modules.remove("drivers/soc/mediatek/mtk-mmdvfs-v3.ko")
@@ -3955,7 +3946,6 @@ def get_overlay_modules_list():
         mgk_64_device_modules.remove("drivers/misc/mediatek/vcp/rv/vcp.ko")
         mgk_64_device_modules.remove("drivers/misc/mediatek/vcp/rv/vcp_status.ko")
         mgk_64_device_modules.remove("drivers/misc/mediatek/vdec_fmt/vdec-fmt.ko")
-        mgk_64_device_modules.remove("drivers/misc/mediatek/videogo/videogo.ko")
         mgk_64_device_modules.remove("drivers/media/platform/mtk-vcodec/mtk-vcodec-dec-v2.ko")
         mgk_64_device_modules.remove("drivers/media/platform/mtk-vcodec/mtk-vcodec-enc-v2.ko")
         mgk_64_device_modules.remove("drivers/soc/mediatek/mtk-mmdvfs-v3.ko")
