@@ -587,6 +587,7 @@ bool vow_ipi_rceive_ack(unsigned int msg_id,
 	case IPIMSG_VOW_PCM_DUMP_ON:
 	case IPIMSG_VOW_PCM_DUMP_OFF:
 	case IPIMSG_VOW_SET_FLAG:
+	case IPIMSG_VOW_ONESHOT_SUPPORT:
 		result = true;
 		break;
 	case IPIMSG_VOW_SET_BARGEIN_ON:
@@ -1321,6 +1322,19 @@ static void vow_register_vendor_feature(int uuid)
 #else
 	VOWDRV_DEBUG("%s(), vow: SCP no support\n\r", __func__);
 #endif
+}
+
+static void vow_set_oneshotsupport(unsigned int status)
+{
+	unsigned int enable = (status == VOWControlCmd_Oneshot_Enable) ? 1 : 0;
+	int ipi_ret;
+
+	ipi_ret = vow_ipi_send(IPIMSG_VOW_ONESHOT_SUPPORT,
+			       1,
+			       &enable,
+			       VOW_IPI_BYPASS_ACK);
+	if (ipi_ret == IPI_SCP_SEND_FAIL || ipi_ret == IPI_SCP_NO_SUPPORT)
+		VOWDRV_DEBUG("[vow oneshot]set oneshot support fail, ret = %d\n", ipi_ret);
 }
 
 static void vow_deregister_vendor_feature(int uuid)
@@ -3112,6 +3126,10 @@ static long VowDrv_ioctl(struct file *fp, unsigned int cmd, unsigned long arg_da
 			break;
 		case VOWControlCmd_GetDump:
 			vow_service_ReadDumpData();
+			break;
+		case VOWControlCmd_Oneshot_Enable:
+		case VOWControlCmd_Oneshot_Disable:
+			vow_set_oneshotsupport(arg);
 			break;
 		default:
 			VOWDRV_DEBUG("VOW_SET_CONTROL no such command = %lu",
