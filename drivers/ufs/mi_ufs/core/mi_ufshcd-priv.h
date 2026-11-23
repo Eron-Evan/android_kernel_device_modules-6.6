@@ -6,6 +6,22 @@
 #include <linux/pm_runtime.h>
 #include "../include/mi_ufshcd.h"
 
+/*
+ * @rtt_cap -  bDeviceRTTCap
+ * @nortt - Max outstanding RTTs supported by controller
+ */
+struct ufs_hba_priv {
+	struct ufs_hba hba;
+	struct completion dev_cmd_compl;
+	u8 rtt_cap;
+	int nortt;
+};
+
+static inline struct ufs_hba_priv *to_hba_priv(struct ufs_hba *hba)
+{
+	return container_of(hba, struct ufs_hba_priv, hba);
+}
+
 static inline bool ufshcd_is_user_access_allowed(struct ufs_hba *hba)
 {
 	return !hba->shutting_down;
@@ -17,13 +33,6 @@ static inline bool ufshcd_keep_autobkops_enabled_except_suspend(
 							struct ufs_hba *hba)
 {
 	return hba->caps & UFSHCD_CAP_KEEP_AUTO_BKOPS_ENABLED_EXCEPT_SUSPEND;
-}
-
-static inline u8 ufshcd_wb_get_query_index(struct ufs_hba *hba)
-{
-	if (hba->dev_info.wb_buffer_type == WB_BUF_MODE_LU_DEDICATED)
-		return hba->dev_info.wb_dedicated_lu;
-	return 0;
 }
 
 static inline bool ufshcd_is_wb_buf_flush_allowed(struct ufs_hba *hba)
@@ -47,15 +56,6 @@ int ufshcd_query_descriptor_retry(struct ufs_hba *hba,
 				  enum desc_idn idn, u8 index,
 				  u8 selector,
 				  u8 *desc_buf, int *buf_len);
-int ufshcd_read_desc_param(struct ufs_hba *hba,
-			   enum desc_idn desc_id,
-			   int desc_index,
-			   u8 param_offset,
-			   u8 *param_read_buf,
-			   u8 param_size);
-int ufshcd_query_attr_retry(struct ufs_hba *hba, enum query_opcode opcode,
-			    enum attr_idn idn, u8 index, u8 selector,
-			    u32 *attr_val);
 int ufshcd_query_attr(struct ufs_hba *hba, enum query_opcode opcode,
 		      enum attr_idn idn, u8 index, u8 selector, u32 *attr_val);
 int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
@@ -64,11 +64,16 @@ void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit);
 void ufshcd_compl_one_cqe(struct ufs_hba *hba, int task_tag,
 			  struct cq_entry *cqe);
 int ufshcd_mcq_init(struct ufs_hba *hba);
-void ufshcd_mcq_disable(struct ufs_hba *hba);
 int ufshcd_mcq_decide_queue_depth(struct ufs_hba *hba);
 int ufshcd_mcq_memory_alloc(struct ufs_hba *hba);
+void ufshcd_mcq_make_queues_operational(struct ufs_hba *hba);
+void ufshcd_mcq_config_mac(struct ufs_hba *hba, u32 max_active_cmds);
+u32 ufshcd_mcq_read_cqis(struct ufs_hba *hba, int i);
+void ufshcd_mcq_write_cqis(struct ufs_hba *hba, u32 val, int i);
 struct ufs_hw_queue *ufshcd_mcq_req_to_hwq(struct ufs_hba *hba,
 					   struct request *req);
+unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
+				       struct ufs_hw_queue *hwq);
 void ufshcd_mcq_compl_all_cqes_lock(struct ufs_hba *hba,
 				    struct ufs_hw_queue *hwq);
 bool ufshcd_cmd_inflight(struct scsi_cmnd *cmd);
@@ -94,7 +99,6 @@ int ufshcd_exec_raw_upiu_cmd(struct ufs_hba *hba,
 			     enum query_opcode desc_op);
 
 int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable);
-int ufshcd_read_device_lvl_exception_id(struct ufs_hba *hba, u64 *exception_id);
 
 /* Wrapper functions for safely calling variant operations */
 static inline const char *ufshcd_get_var_name(struct ufs_hba *hba)
@@ -118,8 +122,8 @@ static inline u32 ufshcd_vops_get_ufs_hci_version(struct ufs_hba *hba)
 	return ufshcd_readl(hba, REG_UFS_VERSION);
 }
 
-static inline int ufshcd_vops_clk_scale_notify(struct ufs_hba *hba, bool up,
-					       enum ufs_notify_change_status status)
+static inline int ufshcd_vops_clk_scale_notify(struct ufs_hba *hba,
+			bool up, enum ufs_notify_change_status status)
 {
 	if (hba->vops && hba->vops->clk_scale_notify)
 		return hba->vops->clk_scale_notify(hba, up, status);
@@ -238,10 +242,24 @@ static inline void ufshcd_vops_config_scaling_param(struct ufs_hba *hba,
 		hba->vops->config_scaling_param(hba, p, data);
 }
 
+static inline void ufshcd_vops_reinit_notify(struct ufs_hba *hba)
+{
+	if (hba->vops && hba->vops->reinit_notify)
+		hba->vops->reinit_notify(hba);
+}
+
 static inline int ufshcd_vops_mcq_config_resource(struct ufs_hba *hba)
 {
 	if (hba->vops && hba->vops->mcq_config_resource)
 		return hba->vops->mcq_config_resource(hba);
+
+	return -EOPNOTSUPP;
+}
+
+static inline int ufshcd_mcq_vops_get_hba_mac(struct ufs_hba *hba)
+{
+	if (hba->vops && hba->vops->get_hba_mac)
+		return hba->vops->get_hba_mac(hba);
 
 	return -EOPNOTSUPP;
 }
@@ -269,17 +287,6 @@ static inline int ufshcd_mcq_vops_config_esi(struct ufs_hba *hba)
 		return hba->vops->config_esi(hba);
 
 	return -EOPNOTSUPP;
-}
-
-static inline void ufshcd_vops_reinit_notify(struct ufs_hba *hba)
-{
-	if (hba->vops && hba->vops->reinit_notify)
-		hba->vops->reinit_notify(hba);
-}
-
-static inline u32 ufshcd_vops_freq_to_gear_speed(struct ufs_hba *hba, unsigned long freq)
-{
-	return 0;
 }
 
 extern const struct ufs_pm_lvl_states ufs_pm_lvl_states[];
@@ -318,40 +325,19 @@ static inline int ufshcd_update_ee_usr_mask(struct ufs_hba *hba,
 					&hba->ee_drv_mask, set, clr);
 }
 
-static inline int ufshcd_rpm_get_sync(struct ufs_hba *hba)
-{
-	return pm_runtime_get_sync(&hba->ufs_device_wlun->sdev_gendev);
-}
-
-static inline void ufshcd_rpm_put_noidle(struct ufs_hba *hba)
-{
-	//pm_runtime_mark_last_busy(&hba->ufs_device_wlun->sdev_gendev);
-	pm_runtime_put_noidle(&hba->ufs_device_wlun->sdev_gendev);
-}
-
-static inline int ufshcd_rpm_get_if_active(struct ufs_hba *hba)
-{
-	return pm_runtime_get_if_active(&hba->ufs_device_wlun->sdev_gendev, 1);
-}
-
-static inline int ufshcd_rpm_put_sync(struct ufs_hba *hba)
-{
-	return pm_runtime_put_sync(&hba->ufs_device_wlun->sdev_gendev);
-}
-
 static inline void ufshcd_rpm_get_noresume(struct ufs_hba *hba)
 {
 	pm_runtime_get_noresume(&hba->ufs_device_wlun->sdev_gendev);
 }
 
+static inline void ufshcd_rpm_put_noidle(struct ufs_hba *hba)
+{
+	pm_runtime_put_noidle(&hba->ufs_device_wlun->sdev_gendev);
+}
+
 static inline int ufshcd_rpm_resume(struct ufs_hba *hba)
 {
 	return pm_runtime_resume(&hba->ufs_device_wlun->sdev_gendev);
-}
-
-static inline int ufshcd_rpm_put(struct ufs_hba *hba)
-{
-	return pm_runtime_put(&hba->ufs_device_wlun->sdev_gendev);
 }
 
 /**

@@ -98,12 +98,8 @@ static int ufshcd_crypto_keyslot_program(struct blk_crypto_profile *profile,
 	return err;
 }
 
-static int ufshcd_crypto_keyslot_evict(struct blk_crypto_profile *profile,
-				       const struct blk_crypto_key *key,
-				       unsigned int slot)
+static int ufshcd_clear_keyslot(struct ufs_hba *hba, int slot)
 {
-	struct ufs_hba *hba =
-		container_of(profile, struct ufs_hba, crypto_profile);
 	/*
 	 * Clear the crypto cfg on the device. Clearing CFGE
 	 * might not be sufficient, so just clear the entire cfg.
@@ -113,23 +109,31 @@ static int ufshcd_crypto_keyslot_evict(struct blk_crypto_profile *profile,
 	return ufshcd_program_key(hba, &cfg, slot);
 }
 
-/*
- * Reprogram the keyslots if needed, and return true if CRYPTO_GENERAL_ENABLE
- * should be used in the host controller initialization sequence.
- */
+static int ufshcd_crypto_keyslot_evict(struct blk_crypto_profile *profile,
+				       const struct blk_crypto_key *key,
+				       unsigned int slot)
+{
+	struct ufs_hba *hba =
+		container_of(profile, struct ufs_hba, crypto_profile);
+
+	return ufshcd_clear_keyslot(hba, slot);
+}
+
 bool ufshcd_crypto_enable(struct ufs_hba *hba)
 {
-	int err = -EOPNOTSUPP;
-
 	if (!(hba->caps & UFSHCD_CAP_CRYPTO))
 		return false;
 
 	/* Reset might clear all keys, so reprogram all the keys. */
-	trace_android_rvh_ufs_reprogram_all_keys(hba, &err);
-	if (err == -EOPNOTSUPP)
-		blk_crypto_reprogram_all_keys(&hba->crypto_profile);
+	if (hba->crypto_profile.num_slots) {
+		int err = -EOPNOTSUPP;
 
-	if (hba->quirks & UFSHCD_QUIRK_BROKEN_CRYPTO_ENABLE)
+		trace_android_rvh_ufs_reprogram_all_keys(hba, &err);
+		if (err == -EOPNOTSUPP)
+			blk_crypto_reprogram_all_keys(&hba->crypto_profile);
+	}
+
+	if (hba->android_quirks & UFSHCD_ANDROID_QUIRK_BROKEN_CRYPTO_ENABLE)
 		return false;
 
 	return true;
@@ -168,7 +172,7 @@ int ufshcd_hba_init_crypto_capabilities(struct ufs_hba *hba)
 	int err = 0;
 	enum blk_crypto_mode_num blk_mode_num;
 
-	if (hba->quirks & UFSHCD_QUIRK_CUSTOM_CRYPTO_PROFILE)
+	if (hba->android_quirks & UFSHCD_ANDROID_QUIRK_CUSTOM_CRYPTO_PROFILE)
 		return 0;
 
 	/*
@@ -241,7 +245,7 @@ void ufshcd_init_crypto(struct ufs_hba *hba)
 	if (!(hba->caps & UFSHCD_CAP_CRYPTO))
 		return;
 
-	/* Clear all keyslots. */
+	/* Clear all keyslots */
 	for (slot = 0; slot < hba->crypto_profile.num_slots; slot++)
 		hba->crypto_profile.ll_ops.keyslot_evict(&hba->crypto_profile,
 							 NULL, slot);
