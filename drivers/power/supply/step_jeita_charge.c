@@ -533,16 +533,31 @@ static void handle_jeita_charge(struct mtk_charger *info)
 	return;
 }
 
+static int step_chg_cfg_last_valid_fcc(const struct step_jeita_cfg0 *cfg)
+{
+	int i;
+
+	for (i = STEP_JEITA_TUPLE_COUNT - 1; i >= 0; i--) {
+		if (cfg[i].high_threshold > 0 && cfg[i].value > 0)
+			return cfg[i].value;
+	}
+	return 0;
+}
+
 static void handle_step_charge(struct mtk_charger *info)
 {
 	get_index(info->step_chg_cfg, info->step_fallback_hyst, info->step_forward_hyst, info->vbat_now, info->step_chg_index, false);
 
-	if (info->step_chg_index[0] == STEP_JEITA_TUPLE_COUNT - 1)
+	if (info->step_chg_index[0] == STEP_JEITA_TUPLE_COUNT - 1 &&
+	    info->step_chg_cfg[info->step_chg_index[0]].high_threshold > 0)
 		info->step_chg_fcc = info->step_chg_cfg[info->step_chg_index[0]].value + 100;
 	else
 		info->step_chg_fcc = info->step_chg_cfg[info->step_chg_index[0]].value;
 
-	 chr_err("handle_step_charge index = %d", info->step_chg_index[0]);
+	if (info->step_chg_fcc <= 0)
+		info->step_chg_fcc = step_chg_cfg_last_valid_fcc(info->step_chg_cfg);
+
+	chr_err("handle_step_charge index = %d", info->step_chg_index[0]);
 	return;
 }
 
@@ -2084,10 +2099,20 @@ static void charge_monitor_func(struct work_struct *work)
 static int debug_cycle_count = 0;
 module_param_named(debug_cycle_count, debug_cycle_count, int, 0600);
 
+static const struct step_jeita_cfg0 default_step_chg_cfg[STEP_JEITA_TUPLE_COUNT] = {
+	{ 3000, 4213, 15400 },
+	{ 4214, 4313, 12400 },
+	{ 4314, 4393, 11394 },
+	{ 4394, 4443, 9495 },
+	{ 4444, 4550, 7596 },
+	{ 0, 0, 0 },
+};
+
 static int parse_battery_cycle_dts(struct mtk_charger *info, int cycle)
 {
 	struct device_node *np = info->pdev->dev.of_node;
 	int total_length = 0, i = 0, ret = 0;
+	int max_elems = ARRAY_SIZE(info->step_chg_cfg) * 3;
 	char name[64];
 	u32 val = 0;
 	char* cell_supplier = "";
@@ -2124,15 +2149,25 @@ static int parse_battery_cycle_dts(struct mtk_charger *info, int cycle)
 	chr_err("%s: parse %s\n", __func__, name);
 
 	total_length = of_property_count_elems_of_size(np, name, sizeof(u32));
-	if (total_length < 0) {
-		chr_err("failed to read total_length of config\n");
-		return -EINVAL;
+	if (total_length < 0 && cycle != BATTERY_CYCLE_1_TO_100) {
+		chr_err("failed to read %s, fallback to step_chg_cfg_1_cycle\n", name);
+		strscpy(name, "step_chg_cfg_1_cycle", sizeof(name));
+		total_length = of_property_count_elems_of_size(np, name, sizeof(u32));
 	}
-
-	ret = of_property_read_u32_array(np, name, (u32 *)info->step_chg_cfg, total_length);
-	if (ret) {
-		chr_err("%s: failed to parse %s\n", __func__, name);
-		return ret;
+	if (total_length < 0) {
+		chr_err("failed to read total_length of config, fallback to default step_chg_cfg\n");
+		memcpy(info->step_chg_cfg, default_step_chg_cfg, sizeof(info->step_chg_cfg));
+		ret = 0;
+	} else {
+		if (total_length > max_elems)
+			total_length = max_elems;
+		memset(info->step_chg_cfg, 0, sizeof(info->step_chg_cfg));
+		ret = of_property_read_u32_array(np, name, (u32 *)info->step_chg_cfg, total_length);
+		if (ret) {
+			chr_err("%s: failed to parse %s, fallback to default step_chg_cfg\n", __func__, name);
+			memcpy(info->step_chg_cfg, default_step_chg_cfg, sizeof(info->step_chg_cfg));
+			ret = 0;
+		}
 	}
 
 	for (i = 0; i < STEP_JEITA_TUPLE_COUNT; i++) {
@@ -2264,7 +2299,12 @@ void reset_step_jeita_charge(struct mtk_charger *info)
 {
 	get_index(info->step_chg_cfg, info->step_fallback_hyst, info->step_forward_hyst, info->vbat_now, info->step_chg_index, true);
 	info->step_chg_fcc = info->step_chg_cfg[info->step_chg_index[0]].value;
-	vote(info->fcc_votable, STEP_CHARGE_VOTER, true, info->step_chg_fcc);
+	if (info->step_chg_fcc <= 0)
+		info->step_chg_fcc = step_chg_cfg_last_valid_fcc(info->step_chg_cfg);
+	if (info->step_chg_fcc > 0)
+		vote(info->fcc_votable, STEP_CHARGE_VOTER, true, info->step_chg_fcc);
+	else
+		vote(info->fcc_votable, STEP_CHARGE_VOTER, false, 0);
 
 	get_index(info->jeita_fv_cfg, info->jeita_fallback_hyst, info->jeita_forward_hyst, info->temp_now, info->jeita_chg_index, true);
 	if (info->vbat_now < info->jeita_fcc_cfg[info->jeita_chg_index[0]].extra_threshold)
