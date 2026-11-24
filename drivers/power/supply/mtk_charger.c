@@ -6360,7 +6360,16 @@ static int mtk_charger_probe(struct platform_device *pdev)
 	if (!info)
 		return -ENOMEM;
 
-	info->project_no = RODIN_CN;
+	{
+		char hwc[16] = {0};
+
+		if (get_hwc_from_dtb(hwc) == 0 && !strncmp(hwc, "GL", 2))
+			info->project_no = RODIN_GL;
+		else if (hwc[0] != '\0' && !strncmp(hwc, "IN", 2))
+			info->project_no = RODIN_IN;
+		else
+			info->project_no = RODIN_CN;
+	}
 
 	pinfo = info;
 	platform_set_drvdata(pdev, info);

@@ -1194,4 +1194,5 @@ extern void generate_xm_single_uevent(struct mtk_charger *info,
 
 extern struct srcu_notifier_head charger_notifier;
 extern int charger_notifier_call_cnain(unsigned long event,int val);
+extern int get_hwc_from_dtb(char *hwc);
 #endif /* __MTK_CHARGER_H */
